@@ -111,12 +111,17 @@ def calculate_retirement_bitcoin_needs(current_age, annual_expenditure_inr, avg_
         year_expense_usd = annual_expenditure_usd_year_1 * (1 + avg_inflation) ** year
 
         # Adjust for capital gains tax
-        # btc_needed_this_year = (year_expense_usd / 0.7) / btc_price_2_5_year
+        gross_btc_needed = year_expense_usd / btc_price_2_5_year
         if cap_gain > 0:
-            y = 1-cap_gain
-            btc_needed_this_year = year_expense_usd / (y * btc_price_2_5_year + cap_gain * btc_purchase_price_usd)
+            gain_per_btc = max(0, btc_price_2_5_year - btc_purchase_price_usd) # Only gains are taxed
+            if gain_per_btc > 0:
+                tax_per_btc = gain_per_btc * cap_gain
+                effective_net_value_per_btc = btc_price_2_5_year - tax_per_btc
+                btc_needed_this_year = year_expense_usd / effective_net_value_per_btc
+            else:
+                btc_needed_this_year = gross_btc_needed
         else:
-            btc_needed_this_year = year_expense_usd / btc_price_2_5_year
+            btc_needed_this_year = gross_btc_needed
         total_bitcoin_needed += btc_needed_this_year
 
         sale_proceeds = btc_needed_this_year * btc_price_2_5_year
