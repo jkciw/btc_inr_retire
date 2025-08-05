@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, time
 import streamlit as st
 import plotly.express as px
 from babel.numbers import format_decimal
+from requests.exceptions import HTTPError
 import requests
 
 
@@ -21,23 +22,101 @@ def bitcoin_power_law_price(days_since_genesis):
 # Function to fetch current Bitcoin market price and USD/INR exchange rate
 
 
-def get_market_price():
-
+def get_market_price_coinpaprika():
     try:
-        # Fetch the latest Bitcoin market price in USD
-        url = 'https://api.coingecko.com/api/v3/simple/price'
-        params = {
-            'ids': 'bitcoin',
-            'vs_currencies': 'usd'
-        }
-        response = requests.get(url, params=params)
+        # CoinPaprika has very generous free limits
+        btc_url = 'https://api.coinpaprika.com/v1/tickers/btc-bitcoin'
+        response = requests.get(btc_url, timeout=10)
+        response.raise_for_status()
+        btc_data = response.json()
+
+        btc_price = btc_data.get('quotes', {}).get('USD', {}).get('price', 0.0)
+
+        # Fetch the latest USD/INR exchange rate
+        url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        if 'bitcoin' not in data or 'usd' not in data['bitcoin']:
-            btc_price = 0.0
+        if 'usd' not in data or 'inr' not in data['usd']:
+            st.warning("Couldn't fetch USD/INR exchange rate")
+            usd_inr = 0.0
         else:
-            btc_price = data['bitcoin']['usd']
+            usd_inr = data['usd']['inr']
 
+        return float(btc_price), float(usd_inr)
+
+    except Exception as e:
+        st.error(f"Error fetching market data: {e}")
+        return 0.0, 0.0
+
+
+def get_market_price_binance():
+    try:
+        # Binance allows 1200 calls/minute without API key
+        btc_url = 'https://api.binance.com/api/v3/ticker/price'
+        btc_params = {'symbol': 'BTCUSDT'}
+        response = requests.get(btc_url, params=btc_params, timeout=10)
+        response.raise_for_status()
+        btc_data = response.json()
+
+        btc_price = float(btc_data.get('price', 0.0))
+
+        # Fetch the latest USD/INR exchange rate
+        url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if 'usd' not in data or 'inr' not in data['usd']:
+            st.warning("Couldn't fetch USD/INR exchange rate")
+            usd_inr = 0.0
+        else:
+            usd_inr = data['usd']['inr']
+
+        return btc_price, usd_inr
+
+    except Exception as e:
+        return 0.0, 0.0
+
+
+@st.cache_data(ttl=600)  # Cache for 10 minutes
+def get_cached_market_price():
+    return get_market_price_with_retry()
+
+
+def get_market_price_with_retry():
+    def fetch_with_retry(url, params=None, max_retries=5):
+        retries = 0
+        while retries < max_retries:
+            try:
+                response = requests.get(url, params=params, timeout=10)
+                response.raise_for_status()
+                return response.json()
+            except HTTPError:
+                if response.status_code == 429:
+                    # Exponential backoff: 1,2,4,8,16 seconds
+                    wait_time = (2 ** retries) * 1
+                    st.warning(
+                        f"Rate limit hit. Waiting {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    retries += 1
+                    continue
+                else:
+                    raise
+            except Exception:
+                raise
+        raise Exception(
+            f"Failed after {max_retries} retries due to rate limiting.")
+
+    try:
+        # Fetch Bitcoin price with retry logic
+        btc_url = 'https://api.coingecko.com/api/v3/simple/price'
+        btc_params = {'ids': 'bitcoin', 'vs_currencies': 'usd'}
+        btc_data = fetch_with_retry(btc_url, btc_params)
+
+        btc_price = btc_data.get('bitcoin', {}).get('usd', 0.0)
+
+        # Add delay between requests
+        time.sleep(2)
         # Fetch the latest USD/INR exchange rate
         url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
         response = requests.get(url, timeout=10)
@@ -53,6 +132,30 @@ def get_market_price():
         st.error(f"Error fetching market data: {e}")
         return 0.0, 0.0
 
+
+def get_market_price():
+    """Try multiple free APIs in order of preference"""
+
+    # API sources in order of preference
+    apis = [
+        ('CoinPaprika', get_market_price_coinpaprika),
+        ('Binance', get_market_price_binance),
+        ('CoinGecko', get_market_price_with_retry)  # CoinGecko as fallback
+    ]
+
+    for api_name, api_func in apis:
+        try:
+            btc_price, usd_inr = api_func()
+            if btc_price > 0 and usd_inr > 0:
+                st.success(f"✅ Market data fetched from {api_name}")
+                return btc_price, usd_inr
+        except Exception as e:
+            st.warning(f"⚠️ {api_name} failed: {str(e)}")
+            continue
+
+    # If all APIs fail, use conservative fallbacks
+    st.error("❌ All APIs failed. Using fallback values.")
+    return 100000.0, 87.0  # Conservative fallback values
 # Function to calculate future USD/INR exchange rate based on depreciation
 
 
