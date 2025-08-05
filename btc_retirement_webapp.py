@@ -631,7 +631,8 @@ def main():
     )
 
     st.title("₿ Bitcoin Retirement Calculator")
-    st.markdown("**Conservative Planning with Scenario Analysis**")
+    st.markdown(
+        "**Powered by the 2.5th percentile price of the Bitcoin power law model**")
 
     # Sidebar inputs
     st.sidebar.header("Input Parameters")
@@ -660,7 +661,7 @@ def main():
 
     if analysis_type == "Scenario Comparison":
         # Run scenario analysis
-        if st.sidebar.button("🚀 Calculate All Scenarios"):
+        if st.sidebar.button("Calculate All Scenarios"):
             with st.spinner("Calculating scenarios..."):
                 scenario_results = calculate_retirement_bitcoin_needs_scenarios(
                     current_age, annual_expenditure_inr, retirement_year
