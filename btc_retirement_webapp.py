@@ -4,8 +4,8 @@ from datetime import datetime, time
 import streamlit as st
 import plotly.express as px
 from babel.numbers import format_decimal
-from requests.exceptions import HTTPError
 import requests
+from requests.exceptions import HTTPError
 
 
 # Function to calculate Bitcoin price using power law model
@@ -19,7 +19,7 @@ def bitcoin_power_law_price(days_since_genesis):
     percentile_2_5_price = trendline_price * 0.24
     return trendline_price, percentile_2_5_price
 
-# Function to fetch current Bitcoin market price and USD/INR exchange rate
+# Functions to fetch current Bitcoin market price and USD/INR exchange rate
 
 
 def get_market_price_coinpaprika():
@@ -156,6 +156,7 @@ def get_market_price():
     # If all APIs fail, use conservative fallbacks
     st.error("❌ All APIs failed. Using fallback values.")
     return 100000.0, 87.0  # Conservative fallback values
+
 # Function to calculate future USD/INR exchange rate based on depreciation
 
 
@@ -369,21 +370,21 @@ def display_scenario_comparison(scenario_results, retirement_year):
 
     with col1:
         st.metric(
-            label="🎯 Primary Target",
+            label="Primary Target",
             value=f"{conservative_btc:.4f} BTC",
             help="Conservative scenario - recommended planning baseline"
         )
 
     with col2:
         st.metric(
-            label="🛡️ Stress Test",
+            label="Stress Test",
             value=f"{extreme_btc:.4f} BTC",
             help="Extreme scenario - worst-case protection"
         )
 
     with col3:
         st.metric(
-            label="📈 Extra Buffer",
+            label="Extra Buffer",
             value=f"{extreme_btc - conservative_btc:.4f} BTC",
             help="Additional BTC needed for extreme scenario protection"
         )
@@ -457,7 +458,7 @@ def create_scenario_charts(scenario_results, current_age, retirement_year):
     st.plotly_chart(fig_expenses, use_container_width=True)
 
     # Add insights with indian_commas formatting
-    st.markdown("**💡 Key Insights:**")
+    st.markdown("**Key Insights:**")
     col1, col2, col3 = st.columns(3)
 
     # Calculate final year expenses for each scenario
@@ -605,7 +606,7 @@ def create_scenario_charts(scenario_results, current_age, retirement_year):
 
     # Display timeline info
     st.info(f"""
-    **📅 Your Timeline:**
+    **Your Timeline:**
     - **Current Age**: {current_age} years (Year {current_year})
     - **Retirement Age**: {retirement_age} years (Year {retirement_year})
     - **Years to Retirement**: {retirement_year - current_year} years
@@ -616,9 +617,9 @@ def create_scenario_charts(scenario_results, current_age, retirement_year):
     # Additional insights
     years_to_retirement = retirement_year - current_year
     if years_to_retirement <= 5:
-        st.warning("⚠️ **Short Retirement Timeline**: With less than 5 years to retirement, consider the Conservative or Extreme scenarios for better security.")
+        st.warning("**Short Retirement Timeline**: With less than 5 years to retirement, consider the Conservative or Extreme scenarios for better security.")
     elif years_to_retirement >= 30:
-        st.success("✅ **Long Retirement Timeline**: You have time for Bitcoin appreciation. The Optimistic scenario may be reasonable, but Conservative is still recommended.")
+        st.success("**Long Retirement Timeline**: You have time for Bitcoin appreciation. The Optimistic scenario may be reasonable, but Conservative is still recommended.")
     else:
         st.info("ℹ️ **Moderate Timeline**: The Conservative scenario provides a good balance of growth assumptions and safety margin.")
 
@@ -661,7 +662,7 @@ def main():
 
     if analysis_type == "Scenario Comparison":
         # Run scenario analysis
-        if st.sidebar.button("Calculate All Scenarios"):
+        if st.sidebar.button("Calculate All Scenarios", icon=":material/calculate:"):
             with st.spinner("Calculating scenarios..."):
                 scenario_results = calculate_retirement_bitcoin_needs_scenarios(
                     current_age, annual_expenditure_inr, retirement_year
@@ -714,7 +715,7 @@ def main():
         st.sidebar.markdown(
             f"- Inflation: {scenario_params['inflation_rate']*100:.1f}%")
 
-        if st.sidebar.button("🚀 Calculate Single Scenario"):
+        if st.sidebar.button("Calculate Single Scenario", icon=":material/calculate:"):
             with st.spinner(f"Calculating {selected_scenario} scenario..."):
                 try:
                     # Get scenario parameters
@@ -733,7 +734,7 @@ def main():
 
                     if years_in_retirement <= 0:
                         st.error(
-                            "❌ Invalid retirement timeline. Retirement age would be 90 or older.")
+                            "Invalid retirement timeline. Retirement age would be 90 or older.")
                     else:
                         # Bitcoin genesis date
                         genesis_date = datetime(2009, 1, 3)
@@ -754,7 +755,7 @@ def main():
 
                         with col1:
                             st.metric(
-                                label="💰 Total Bitcoin Needed",
+                                label="Total Bitcoin Needed",
                                 value=f"{results['total_bitcoin_needed']:.4f} BTC"
                             )
 
@@ -786,7 +787,7 @@ def main():
                                 current_value_inr = current_value_usd * current_usd_inr
 
                                 st.markdown(
-                                    "### 💵 Current Value of Required Bitcoin")
+                                    "### Current Value of Required Bitcoin")
                                 col1, col2 = st.columns(2)
 
                                 with col1:
@@ -804,7 +805,7 @@ def main():
                             pass
 
                         # Scenario parameters display
-                        st.markdown("### ⚙️ Scenario Parameters")
+                        st.markdown("### Scenario Parameters")
                         param_col1, param_col2 = st.columns(2)
 
                         with param_col1:
@@ -820,7 +821,7 @@ def main():
                             )
 
                         # Year-wise breakdown chart
-                        st.markdown("### 📈 Bitcoin Requirements Over Time")
+                        st.markdown("### Bitcoin Requirements Over Time")
 
                         fig_yearly = px.bar(
                             results['breakdown'],
@@ -828,7 +829,23 @@ def main():
                             y='BTC Needed',
                             title=f"Annual Bitcoin Requirements - {selected_scenario.capitalize()} Scenario",
                             color_discrete_sequence=[color],
-                            hover_data=['Age', 'Expense (INR)', 'USD/INR Rate']
+                        )
+                        hover_expenses = [
+                            f"₹{indian_commas(val, 2)}" for val in results['breakdown']['Expense (INR)']]
+                        hover_rates = [
+                            f"₹{indian_commas(val, 2)}" for val in results['breakdown']['USD/INR Rate']]
+                        fig_yearly.update_traces(
+                            hovertemplate="<b>Year: %{x}</b><br>" +
+                                          "Age: %{customdata[0]}<br>" +
+                                          "BTC Needed: %{y:.6f}<br>" +
+                                          "Expenses(INR): %{customdata[1]}<br>" +
+                                          "USD/INR Rate: %{customdata[2]}<br>" +
+                                          "<extra></extra>",
+                            customdata=list(zip(
+                                results['breakdown']['Age'].values,
+                                hover_expenses,
+                                hover_rates
+                            ))
                         )
 
                         fig_yearly.update_layout(
@@ -839,29 +856,77 @@ def main():
 
                         st.plotly_chart(fig_yearly, use_container_width=True)
 
-                        # Cumulative Bitcoin requirement chart
-                        results['breakdown']['Cumulative BTC'] = results['breakdown']['BTC Needed'].cumsum(
-                        )
+                        # Annual expense vs BTC price comparison
+                        st.markdown(
+                            "### Annual Expenses vs Bitcoin Price Growth")
 
-                        fig_cumulative = px.line(
-                            results['breakdown'],
+                        chart_data = results['breakdown'].copy()
+                        # Convert to lakhs
+                        chart_data['Expense (Lakhs)'] = chart_data['Expense (INR)'] / 100000
+                        # Convert to crores
+                        chart_data['BTC Price (Crores)'] = chart_data['BTC Price (INR)'] / 10000000
+
+                        fig_dual = px.line(
+                            chart_data,
                             x='Year',
-                            y='Cumulative BTC',
-                            title=f"Cumulative Bitcoin Requirements - {selected_scenario.capitalize()} Scenario",
+                            y='Expense (Lakhs)',
+                            title=f"Annual Expenses vs Bitcoin Price Appreciation(2.5th percentile price) - {selected_scenario.capitalize()} Scenario",
                             color_discrete_sequence=[color],
                             markers=True
                         )
 
-                        fig_cumulative.update_layout(
-                            xaxis_title="Retirement Year",
-                            yaxis_title="Cumulative Bitcoin Needed"
+                        fig_dual.update_traces(
+                            name="Annual Expenses (₹ Lakhs)",
+                            hovertemplate="<b>Year: %{x}</b><br>" +
+                            "Annual Expenses: ₹%{y:.2f} Lakhs<br>" +
+                            "<extra></extra>",
+                            showlegend=True
                         )
 
-                        st.plotly_chart(
-                            fig_cumulative, use_container_width=True)
+                        # Add BTC price on secondary axis (in crores)
+                        fig_dual.add_scatter(
+                            x=chart_data['Year'],
+                            y=chart_data['BTC Price (Crores)'],
+                            mode='lines+markers',
+                            name='BTC Price (₹ Crores)',
+                            yaxis='y2',
+                            line=dict(color='green', width=3),
+                            marker=dict(size=6, color='green'),
+                            hovertemplate="<b>Year: %{x}</b><br>" +
+                            "BTC Price: ₹%{y:.2f} Crores<br>" +
+                            "<extra></extra>",
+                            showlegend=True
+                        )
+
+                        fig_dual.update_layout(
+                            xaxis_title="Retirement Year",
+                            yaxis=dict(
+                                title="Annual Expenses (₹ Lakhs)",
+                                side="left",
+                                type="log",  # Log scale for primary y-axis
+                                tickformat='.2f'
+                            ),
+                            yaxis2=dict(
+                                title="BTC Price (₹ Crores)",
+                                side="right",
+                                overlaying="y",
+                                type="log",  # Log scale for secondary y-axis
+                                tickformat='.2f'
+                            ),
+                            hovermode='x unified',
+                            legend=dict(
+                                yanchor="top",
+                                y=0.99,
+                                xanchor="left",
+                                x=0.01,
+                                bgcolor="rgba(255,255,255,0.8)"
+                            )
+                        )
+
+                        st.plotly_chart(fig_dual, use_container_width=True)
 
                         # Detailed breakdown table
-                        st.markdown("### 📋 Detailed Year-wise Breakdown")
+                        st.markdown("### Detailed Year-wise Breakdown")
 
                         # Format the dataframe for better display
                         display_df = results['breakdown'].copy()
@@ -882,27 +947,28 @@ def main():
                         # Download option
                         csv = results['breakdown'].to_csv(index=False)
                         st.download_button(
-                            label="💾 Download Detailed Breakdown (CSV)",
+                            label=" Download Detailed Breakdown (CSV)",
                             data=csv,
                             file_name=f'bitcoin_retirement_{selected_scenario}_scenario_{current_age}yo_{retirement_year}.csv',
-                            mime='text/csv'
+                            mime='text/csv',
+                            icon=":material/download:"
                         )
 
                         # Scenario-specific recommendations
-                        st.markdown("### 💡 Recommendations")
+                        st.markdown("### Recommendations")
 
                         if selected_scenario == 'optimistic':
                             st.success(
-                                "✅ **Optimistic Scenario**: This assumes favorable economic conditions. Consider also reviewing the Conservative scenario for additional security.")
+                                "**Optimistic Scenario**: This assumes favorable economic conditions. Consider also reviewing the Conservative scenario for additional security.")
                         elif selected_scenario == 'conservative':
                             st.info(
-                                "ℹ️ **Conservative Scenario**: This provides a balanced approach with reasonable safety margins. Recommended for primary retirement planning.")
+                                "**Conservative Scenario**: This provides a balanced approach with reasonable safety margins. Recommended for primary retirement planning.")
                         else:  # extreme
                             st.warning(
-                                "⚠️ **Extreme Scenario**: This represents worst-case conditions. If you can afford this amount, you'll be well-prepared for any economic situation.")
+                                "**Extreme Scenario**: This represents worst-case conditions. If you can afford this amount, you'll be well-prepared for any economic situation.")
 
                         # Compare with other scenarios
-                        st.markdown("### 🔄 Quick Scenario Comparison")
+                        st.markdown("### Quick Scenario Comparison")
                         comparison_data = []
 
                         for scenario_name in ['optimistic', 'conservative', 'extreme']:
@@ -921,9 +987,10 @@ def main():
                             })
 
                         comparison_df = pd.DataFrame(comparison_data)
-                        st.dataframe(comparison_df, use_container_width=True)
+                        st.dataframe(
+                            comparison_df, use_container_width=True, hide_index=True)
                 except Exception as e:
-                    st.error(f"❌ Error in calculation: {str(e)}")
+                    st.error(f"Error in calculation: {str(e)}")
                     st.error("Please check your input values and try again.")
 
 
