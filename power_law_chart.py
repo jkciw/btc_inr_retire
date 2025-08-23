@@ -1,6 +1,5 @@
 """
-Power Law Information Module - Dark Mode Compatible (FIXED)
-
+Power Law Information Module
 This module contains the information and visualization about Bitcoin's power law model.
 """
 
@@ -20,7 +19,6 @@ class PowerLawChart:
     def __init__(self, csv_file_path="coinmcap_consolidated.csv"):
         """
         Initialize the PowerLawChart class.
-
         Args:
             csv_file_path: Path to the Bitcoin price CSV file
         """
@@ -31,7 +29,6 @@ class PowerLawChart:
     def _get_chart_colors(self):
         """
         Get color scheme that works in both light and dark mode.
-
         Returns:
             dict: Color configuration for the chart
         """
@@ -51,7 +48,6 @@ class PowerLawChart:
     def load_bitcoin_data(self):
         """
         Load historical Bitcoin price data from CSV file.
-
         Returns:
             pd.DataFrame: Processed Bitcoin price data or None if error
         """
@@ -78,7 +74,6 @@ class PowerLawChart:
     def get_yearly_prices(self):
         """
         Extract year-end Bitcoin prices from the loaded data.
-
         Returns:
             dict: Dictionary with years as keys and year-end prices as values
         """
@@ -100,10 +95,8 @@ class PowerLawChart:
     def get_sampled_data(self, sample_days=60):
         """
         Get sampled Bitcoin price data for smooth chart plotting.
-
         Args:
             sample_days: Sample every N days to reduce data points
-
         Returns:
             tuple: (years_float, prices) for plotting
         """
@@ -129,11 +122,9 @@ class PowerLawChart:
     def generate_power_law_data(self, start_year=2010, end_year=2051):
         """
         Generate power law trendline and 2.5th percentile data.
-
         Args:
             start_year: Start year for projections
             end_year: End year for projections
-
         Returns:
             pd.DataFrame: Power law data with years, trendline, and conservative prices
         """
@@ -157,11 +148,9 @@ class PowerLawChart:
     def calculate_success_metrics(self, power_law_df, yearly_prices):
         """
         Calculate historical validation metrics.
-
         Args:
             power_law_df: DataFrame with power law predictions
             yearly_prices: Dictionary of yearly Bitcoin prices
-
         Returns:
             dict: Success metrics and statistics
         """
@@ -206,7 +195,6 @@ class PowerLawChart:
     def create_power_law_chart(self):
         """
         Create the interactive power law chart with historical data overlay - Dark mode compatible.
-
         Returns:
             plotly.graph_objects.Figure: The power law chart optimized for both light and dark themes
         """
@@ -360,7 +348,7 @@ class PowerLawChart:
                 if current_actual:
                     multiplier = current_actual / current_conservative
                 st.success(f"""
-                **🎯 Power Law Analysis as on 1st Jan {current_year}:**
+                **Power Law Analysis as on 1st Jan {current_year}:**
                 - **Trend Line**: ${current_data['Trendline'].iloc[0]:,.0f}
                 - **Conservative (2.5th)**: ${current_data['Conservative (2.5th)'].iloc[0]:,.0f}
                 - **Market Price**: ${metrics['latest_price']:,} (real market price)
@@ -370,7 +358,7 @@ class PowerLawChart:
 
         with col2:
             st.success(f"""
-            **🎯 Real Data:**
+            **Real Data:**
             - **Data Points**: {metrics['total_data_points']:,} days of actual prices
             - **Time Span**: {metrics['data_span_years']:.1f} years of continuous data
             - **Latest Price**: ${metrics['latest_price']:,} (real market data)

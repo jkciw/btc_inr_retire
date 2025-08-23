@@ -44,6 +44,7 @@ def display_scenario_comparison(scenario_results: Dict[str, Any], retirement_yea
         comparison_data.append({
             'Scenario': scenario_name,
             'BTC Needed': f"{results['total_bitcoin_needed']:.4f}",
+            'Retirement Corpus Needed (₹)': f"₹{indian_commas(results['total_inr_needed'], 0)}",
             'Inflation Rate': f"{params['inflation_rate']*100:.1f}%",
             'Annual Expenditure at retirement (₹)': f"₹{indian_commas(annual_expenditure_at_retirement, 0)}",
             'USD Depreciation Rate': f"{params['depreciation_rate']*100:.1f}%",

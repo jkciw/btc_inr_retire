@@ -107,13 +107,15 @@ def calculate_single_scenario(current_age: int, retirement_year: int,
         years_from_current, depreciation_rate=depreciation_rate)
 
     # Calculate annual expenditure at retirement
-    annual_expenditure_at_retirement = annual_expenditure_inr * \
+    annual_expenditure_at_retirement_inr = annual_expenditure_inr * \
         (1 + inflation_rate) ** years_to_retirement
 
-    annual_expenditure_usd_year_1 = annual_expenditure_at_retirement / retirement_usd_inr
+    annual_expenditure_at_retirement_usd = annual_expenditure_at_retirement_inr / \
+        retirement_usd_inr
 
     # Calculate Bitcoin needed for each year
     total_bitcoin_needed = 0.0
+    total_expense_retirement_inr = 0.0
     breakdown = []
 
     for year in range(years_in_retirement):
@@ -128,21 +130,21 @@ def calculate_single_scenario(current_age: int, retirement_year: int,
         current_usd_inr = retirement_usd_inr * (1 + depreciation_rate) ** year
 
         # Calculate annual expenditure with inflation
-        year_expense_usd = annual_expenditure_usd_year_1 * \
+        this_year_expense_inr = annual_expenditure_at_retirement_inr * \
             (1 + inflation_rate) ** year
-        year_expense_inr = year_expense_usd * current_usd_inr
 
         # Calculate Bitcoin needed
         btc_price_2_5_inr = btc_price_2_5_usd * current_usd_inr
-        btc_needed_this_year = year_expense_inr / btc_price_2_5_inr
+        btc_needed_this_year = this_year_expense_inr / btc_price_2_5_inr
 
         total_bitcoin_needed += btc_needed_this_year
+        total_expense_retirement_inr += this_year_expense_inr
 
         # Store breakdown
         breakdown.append({
             'Year': current_retirement_year,
             'Age': current_age + years_to_retirement + year,
-            'Expense (INR)': year_expense_inr,
+            'Expense (INR)': this_year_expense_inr,
             'BTC Price (USD)': btc_price_2_5_usd,
             'BTC Price (INR)': btc_price_2_5_inr,
             'BTC Needed': btc_needed_this_year,
@@ -152,7 +154,8 @@ def calculate_single_scenario(current_age: int, retirement_year: int,
     return {
         'total_bitcoin_needed': total_bitcoin_needed,
         'retirement_usd_inr': retirement_usd_inr,
-        'annual_expenditure_at_retirement': annual_expenditure_at_retirement,
+        'annual_expenditure_at_retirement': annual_expenditure_at_retirement_inr,
+        'total_inr_needed': total_expense_retirement_inr,
         'retirement_age': current_age + years_to_retirement,
         'years_in_retirement': years_in_retirement,
         'breakdown': pd.DataFrame(breakdown)

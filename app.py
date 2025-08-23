@@ -20,6 +20,8 @@ import pandas as pd
 import numpy as np
 from utils import indian_commas
 from power_law_chart import display_power_law_chart
+from parameter_surface_plot import display_parameter_surface_chart
+from heatmap import display_interactive_heatmap_chart
 
 
 def main():
@@ -64,6 +66,10 @@ def main():
 
                 # 5. Show detailed breakdown for each scenario
                 display_scenario_breakdowns(scenario_results)
+
+                # 6. Show heatmap for BTC needed
+                display_interactive_heatmap_chart(
+                    current_age, annual_expenditure_inr, retirement_year)
 
             else:
                 st.error(
