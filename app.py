@@ -20,7 +20,6 @@ import pandas as pd
 import numpy as np
 from utils import indian_commas
 from power_law_chart import display_power_law_chart
-from parameter_surface_plot import display_parameter_surface_chart
 from heatmap import display_interactive_heatmap_chart
 
 
