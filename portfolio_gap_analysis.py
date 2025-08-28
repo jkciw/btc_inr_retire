@@ -719,7 +719,7 @@ class PortfolioGapAnalysis:
                     y=annotation_y,
                     text=f"Total Cost:<br>₹{indian_commas(scenario_totals[scenario_key], 0)}",
                     showarrow=False,
-                    font=dict(size=10, color='darkblue'),
+                    font=dict(size=12, color='darkblue'),
                     bgcolor="rgba(255,255,255,0.9)",
                     bordercolor="darkblue",
                     borderwidth=1,

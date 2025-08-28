@@ -245,7 +245,7 @@ class BitcoinPowerLawCalculator:
 _global_calculator = BitcoinPowerLawCalculator()
 
 
-@st.cache_data(ttl=None)
+# @st.cache_data(ttl=None)
 def initialize_percentiles_from_csv(csv_file_path: str):
     """
     Initialize the global calculator with percentiles from CSV file.

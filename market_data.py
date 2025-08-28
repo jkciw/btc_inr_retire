@@ -8,7 +8,7 @@ from free APIs with retry logic and fallback mechanisms.
 import requests
 from requests.exceptions import HTTPError
 import streamlit as st
-from datetime import time
+import time
 from typing import Tuple
 
 
@@ -71,6 +71,78 @@ def get_market_price_binance() -> Tuple[float, float]:
         if 'usd' not in data or 'inr' not in data['usd']:
             st.warning("Couldn't fetch USD/INR exchange rate")
             usd_inr = 0.0
+        else:
+            usd_inr = data['usd']['inr']
+
+        return btc_price, usd_inr
+
+    except Exception as e:
+        return 0.0, 0.0
+
+
+def get_market_price_kraken() -> Tuple[float, float]:
+    """
+    Fetch Bitcoin price from Kraken and USD/INR rate from currency API.
+    Returns:
+        Tuple of (btc_price_usd, usd_inr_rate)
+    """
+    try:
+        # Kraken public API
+        btc_url = 'https://api.kraken.com/0/public/Ticker'
+        btc_params = {'pair': 'XBTUSD'}
+        response = requests.get(btc_url, params=btc_params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if 'result' in data and 'XXBTZUSD' in data['result']:
+            btc_price = float(data['result']['XXBTZUSD']['c'][0])
+        else:
+            return 0.0, 0.0
+
+        # Fetch the latest USD/INR exchange rate
+        url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if 'usd' not in data or 'inr' not in data['usd']:
+            usd_inr = 86.0  # Fallback rate
+        else:
+            usd_inr = data['usd']['inr']
+
+        return btc_price, usd_inr
+
+    except Exception as e:
+        return 0.0, 0.0
+
+
+def get_market_price_coinbase() -> Tuple[float, float]:
+    """
+    Fetch Bitcoin price from Coinbase and USD/INR rate from currency API.
+    Returns:
+        Tuple of (btc_price_usd, usd_inr_rate)
+    """
+    try:
+        # Coinbase public API
+        btc_url = 'https://api.coinbase.com/v2/exchange-rates'
+        btc_params = {'currency': 'BTC'}
+        response = requests.get(btc_url, params=btc_params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if 'data' in data and 'rates' in data['data'] and 'USD' in data['data']['rates']:
+            btc_price = float(data['data']['rates']['USD'])
+        else:
+            return 0.0, 0.0
+
+        # Fetch the latest USD/INR exchange rate
+        url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        if 'usd' not in data or 'inr' not in data['usd']:
+            usd_inr = 86.0  # Fallback rate
         else:
             usd_inr = data['usd']['inr']
 
@@ -176,6 +248,8 @@ def get_market_price() -> Tuple[float, float]:
     apis = [
         ('CoinPaprika', get_market_price_coinpaprika),
         ('Binance', get_market_price_binance),
+        ('Kraken', get_market_price_kraken),
+        ('Coinbase', get_market_price_coinbase),
         ('CoinGecko', get_market_price_with_retry)  # CoinGecko as fallback
     ]
 

@@ -46,7 +46,7 @@ def main():
             try:
                 initialize_percentiles_from_csv("coinmcap_consolidated.csv")
                 st.session_state.percentiles_initialized = True
-
+                # Don't show success message here to avoid clutter
             except Exception as e:
                 st.error(f"Error initializing percentiles: {e}")
                 st.session_state.percentiles_initialized = False
