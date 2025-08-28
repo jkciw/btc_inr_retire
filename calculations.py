@@ -13,6 +13,7 @@ import pandas as pd
 from datetime import datetime
 from typing import Tuple, Dict, Any, Optional, List
 import statsmodels.api as sm
+import streamlit as st
 from config import SCENARIOS
 
 
@@ -244,6 +245,7 @@ class BitcoinPowerLawCalculator:
 _global_calculator = BitcoinPowerLawCalculator()
 
 
+@st.cache_data(ttl=None)
 def initialize_percentiles_from_csv(csv_file_path: str):
     """
     Initialize the global calculator with percentiles from CSV file.

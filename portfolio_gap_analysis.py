@@ -89,12 +89,12 @@ class PortfolioGapAnalysis:
             min_value=0.0,
             max_value=100.0,
             value=0.0,
-            step=0.001,
+            step=0.0005,
             format="%.6f",
             help="Enter the amount of Bitcoin you currently have specifically for retirement planning",
             label_visibility="hidden",
+            key="user_btc_holdings"
         )
-
         return current_btc
 
     def analyze_portfolio_gap(self, current_btc: float) -> Dict[str, Any]:
