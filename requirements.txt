@@ -5,3 +5,4 @@ numpy
 babel
 matplotlib
 plotly
+statsmodels
