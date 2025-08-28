@@ -85,13 +85,10 @@ class PortfolioGapAnalysis:
             "### Enter Your Exisitng Bitcoins Earmarked for Retirement")
 
         with st.form("btc_holdings_form"):
-            current_btc = st.number_input(
+            btc_text = st.text_input(
                 "Bitcoin Holdings (BTC)",
-                min_value=0.0,
-                max_value=100.0,
-                value=0.0,
-                step=0.0005,
-                format="%.6f",
+                value="0.000000",
+                placeholder="Enter amount (e.g., 0.123456)",
                 help="Enter the amount of Bitcoin you currently have specifically for retirement planning"
             )
 
@@ -100,10 +97,26 @@ class PortfolioGapAnalysis:
 
             # Only update when form is submitted
             if submitted:
-                st.session_state.user_btc_holdings = current_btc
-                st.success(f"✅ Updated holdings to {current_btc:.6f} BTC")
-                return current_btc
+                try:
+                    current_btc = float(btc_text)
+                    # Validation
+                    if current_btc < 0:
+                        st.error("❌ Bitcoin amount cannot be negative")
+                        return st.session_state.get('user_btc_holdings', 0.0)
+                    elif current_btc > 100:
+                        st.error(
+                            "❌ Bitcoin amount seems too high (>100 BTC). Please verify.")
+                        return st.session_state.get('user_btc_holdings', 0.0)
+                    else:
+                        # Success - store and display
+                        st.session_state.user_btc_holdings = current_btc
+                        st.success(
+                            f"✅ Updated holdings to {current_btc:.6f} BTC")
+                        return current_btc
 
+                except ValueError:
+                    st.error("❌ Please enter a valid number (e.g., 0.123456)")
+                    return st.session_state.get('user_btc_holdings', 0.0)
             # Return existing value if no submission
             return st.session_state.get('user_btc_holdings', 0.0)
 
