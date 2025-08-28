@@ -9,7 +9,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
-from calculations_old import calculate_single_scenario
+from calculations import calculate_single_scenario
 from config import SCENARIOS
 
 
