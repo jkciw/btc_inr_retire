@@ -478,7 +478,7 @@ def display_scenario_breakdowns(scenario_results):
             st.markdown("#### Optimistic Scenario")
             optimistic_df = format_breakdown_dataframe(
                 scenario_results['Optimistic']['breakdown'])
-            st.dataframe(optimistic_df, width='stretch',
+            st.dataframe(optimistic_df,
                          hide_index=True)
 
             # Download button for optimistic
@@ -495,8 +495,7 @@ def display_scenario_breakdowns(scenario_results):
             st.markdown("#### Conservative Scenario")
             conservative_df = format_breakdown_dataframe(
                 scenario_results['Conservative']['breakdown'])
-            st.dataframe(conservative_df,
-                         width='stretch', hide_index=True)
+            st.dataframe(conservative_df, hide_index=True)
 
             # Download button for conservative
             csv_cons = scenario_results['Conservative']['breakdown'].to_csv(
@@ -512,7 +511,7 @@ def display_scenario_breakdowns(scenario_results):
             st.markdown("#### Extreme Scenario")
             extreme_df = format_breakdown_dataframe(
                 scenario_results['Extreme']['breakdown'])
-            st.dataframe(extreme_df, width='stretch', hide_index=True)
+            st.dataframe(extreme_df, hide_index=True)
 
             # Download button for extreme
             csv_ext = scenario_results['Extreme']['breakdown'].to_csv(

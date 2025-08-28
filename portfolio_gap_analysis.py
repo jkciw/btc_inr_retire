@@ -356,7 +356,7 @@ class PortfolioGapAnalysis:
 
         if comparison_data:
             df_comparison = pd.DataFrame(comparison_data)
-            st.dataframe(df_comparison, width='stretch',
+            st.dataframe(df_comparison,
                          hide_index=True)
 
         # Show waterfall chart
@@ -531,15 +531,15 @@ class PortfolioGapAnalysis:
             with col1:
                 st.markdown("**First 12 months:**")
                 st.dataframe(display_df[display_columns].head(
-                    12), width='stretch', hide_index=True)
+                    12), hide_index=True)
 
             with col2:
                 st.markdown("**Last 12 months:**")
                 st.dataframe(display_df[display_columns].tail(
-                    12), width='stretch', hide_index=True)
+                    12), hide_index=True)
         else:
             st.dataframe(display_df[display_columns],
-                         width='stretch', hide_index=True)
+                         hide_index=True)
 
     def show_implementation_guidance(self, sip_scenarios: Dict[str, Any]):
         """Show practical implementation guidance."""

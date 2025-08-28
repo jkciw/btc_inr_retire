@@ -326,7 +326,7 @@ class InteractiveHeatmap:
             })
 
         df_scenarios = pd.DataFrame(scenario_data)
-        st.dataframe(df_scenarios, width='stretch', hide_index=True)
+        st.dataframe(df_scenarios, hide_index=True)
         st.info("""
 
         **Scenario Positioning:**
