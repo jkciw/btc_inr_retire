@@ -84,18 +84,28 @@ class PortfolioGapAnalysis:
         st.markdown(
             "### Enter Your Exisitng Bitcoins Earmarked for Retirement")
 
-        current_btc = st.number_input(
-            "Bitcoin Holdings",
-            min_value=0.0,
-            max_value=100.0,
-            value=0.0,
-            step=0.0005,
-            format="%.6f",
-            help="Enter the amount of Bitcoin you currently have specifically for retirement planning",
-            label_visibility="hidden",
-            key="user_btc_holdings"
-        )
-        return current_btc
+        with st.form("btc_holdings_form"):
+            current_btc = st.number_input(
+                "Bitcoin Holdings (BTC)",
+                min_value=0.0,
+                max_value=100.0,
+                value=0.0,
+                step=0.0005,
+                format="%.6f",
+                help="Enter the amount of Bitcoin you currently have specifically for retirement planning"
+            )
+
+            # Form submit button
+            submitted = st.form_submit_button("Update Holdings")
+
+            # Only update when form is submitted
+            if submitted:
+                st.session_state.user_btc_holdings = current_btc
+                st.success(f"✅ Updated holdings to {current_btc:.6f} BTC")
+                return current_btc
+
+            # Return existing value if no submission
+            return st.session_state.get('user_btc_holdings', 0.0)
 
     def analyze_portfolio_gap(self, current_btc: float) -> Dict[str, Any]:
         """Analyze the gap between current holdings and Conservative retirement target."""
