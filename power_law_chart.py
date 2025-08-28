@@ -400,7 +400,7 @@ class PowerLawChart:
                 fig = self.create_power_law_chart()
                 if fig:
                     st.plotly_chart(
-                        fig, use_container_width=True, theme="streamlit")
+                        fig, width='stretch', theme="streamlit")
 
                     # Display insights
                     self.display_chart_insights()

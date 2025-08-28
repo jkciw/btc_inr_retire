@@ -326,7 +326,7 @@ class InteractiveHeatmap:
             })
 
         df_scenarios = pd.DataFrame(scenario_data)
-        st.dataframe(df_scenarios, use_container_width=True, hide_index=True)
+        st.dataframe(df_scenarios, width='stretch', hide_index=True)
         st.info("""
 
         **Scenario Positioning:**
@@ -373,7 +373,7 @@ def display_interactive_heatmap_chart(current_age: int, annual_expenditure_inr: 
 
         # Main heatmap visualization
         fig = heatmap.create_interactive_heatmap(grid_size=25)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Analysis sections
         heatmap.display_heatmap_insights()

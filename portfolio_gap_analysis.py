@@ -356,7 +356,7 @@ class PortfolioGapAnalysis:
 
         if comparison_data:
             df_comparison = pd.DataFrame(comparison_data)
-            st.dataframe(df_comparison, use_container_width=True,
+            st.dataframe(df_comparison, width='stretch',
                          hide_index=True)
 
         # Show waterfall chart
@@ -366,7 +366,7 @@ class PortfolioGapAnalysis:
             current_btc_price,
             analysis['conservative_gap']
         )
-        st.plotly_chart(waterfall_fig, use_container_width=True)
+        st.plotly_chart(waterfall_fig, width='stretch')
 
         # Add detailed scenario explanations
         if comparison_data:
@@ -531,15 +531,15 @@ class PortfolioGapAnalysis:
             with col1:
                 st.markdown("**First 12 months:**")
                 st.dataframe(display_df[display_columns].head(
-                    12), use_container_width=True, hide_index=True)
+                    12), width='stretch', hide_index=True)
 
             with col2:
                 st.markdown("**Last 12 months:**")
                 st.dataframe(display_df[display_columns].tail(
-                    12), use_container_width=True, hide_index=True)
+                    12), width='stretch', hide_index=True)
         else:
             st.dataframe(display_df[display_columns],
-                         use_container_width=True, hide_index=True)
+                         width='stretch', hide_index=True)
 
     def show_implementation_guidance(self, sip_scenarios: Dict[str, Any]):
         """Show practical implementation guidance."""

@@ -350,7 +350,7 @@ def create_bitcoin_requirements_chart(scenario_results: dict, current_age: int, 
         height=500
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 
 def create_annual_expenses_chart(scenario_results: dict, current_age: int, retirement_year: int):
@@ -425,7 +425,7 @@ def create_annual_expenses_chart(scenario_results: dict, current_age: int, retir
         height=500
     )
 
-    st.plotly_chart(fig_expenses, use_container_width=True)
+    st.plotly_chart(fig_expenses, width='stretch')
 
 
 def display_recommendations(scenario_results: dict):
@@ -478,7 +478,7 @@ def display_scenario_breakdowns(scenario_results):
             st.markdown("#### Optimistic Scenario")
             optimistic_df = format_breakdown_dataframe(
                 scenario_results['Optimistic']['breakdown'])
-            st.dataframe(optimistic_df, use_container_width=True,
+            st.dataframe(optimistic_df, width='stretch',
                          hide_index=True)
 
             # Download button for optimistic
@@ -496,7 +496,7 @@ def display_scenario_breakdowns(scenario_results):
             conservative_df = format_breakdown_dataframe(
                 scenario_results['Conservative']['breakdown'])
             st.dataframe(conservative_df,
-                         use_container_width=True, hide_index=True)
+                         width='stretch', hide_index=True)
 
             # Download button for conservative
             csv_cons = scenario_results['Conservative']['breakdown'].to_csv(
@@ -512,7 +512,7 @@ def display_scenario_breakdowns(scenario_results):
             st.markdown("#### Extreme Scenario")
             extreme_df = format_breakdown_dataframe(
                 scenario_results['Extreme']['breakdown'])
-            st.dataframe(extreme_df, use_container_width=True, hide_index=True)
+            st.dataframe(extreme_df, width='stretch', hide_index=True)
 
             # Download button for extreme
             csv_ext = scenario_results['Extreme']['breakdown'].to_csv(
