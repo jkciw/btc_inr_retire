@@ -20,7 +20,7 @@ def get_market_price_coinpaprika() -> Tuple[float, float]:
         Tuple of (btc_price_usd, usd_inr_rate)
     """
     try:
-        # CoinPaprika has very generous free limits
+        # Fetch from CoinPaprika
         btc_url = 'https://api.coinpaprika.com/v1/tickers/btc-bitcoin'
         response = requests.get(btc_url, timeout=10)
         response.raise_for_status()
@@ -183,7 +183,7 @@ def get_market_price() -> Tuple[float, float]:
         try:
             btc_price, usd_inr = api_func()
             if btc_price > 0 and usd_inr > 0:
-                st.success(f"Market data fetched from {api_name}")
+                # st.success(f"Market data fetched from {api_name}")
                 return btc_price, usd_inr
         except Exception as e:
             st.warning(f"{api_name} failed: {str(e)}")

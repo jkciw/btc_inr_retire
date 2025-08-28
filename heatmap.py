@@ -9,7 +9,8 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime
-from calculations import calculate_single_scenario
+from calculations_old import calculate_single_scenario
+from config import SCENARIOS
 
 
 class InteractiveHeatmap:
@@ -32,11 +33,13 @@ class InteractiveHeatmap:
         self.years_in_retirement = max(0, 90 - retirement_age)
 
         # Standard scenario parameters
-        self.scenarios = {
-            'optimistic': {'inflation': 6.5, 'depreciation': 3.0, 'color': '#28a745'},
-            'conservative': {'inflation': 8.0, 'depreciation': 4.5, 'color': '#ffc107'},
-            'extreme': {'inflation': 10.0, 'depreciation': 6.0, 'color': '#dc3545'}
-        }
+        self.scenarios = {}
+        for name, params in SCENARIOS.items():
+            self.scenarios[name] = {
+                'inflation': params['inflation_rate'] * 100,
+                'depreciation': params['depreciation_rate'] * 100,
+                'color': params['color']
+            }
 
     def calculate_btc_for_parameters(self, inflation_rate: float, depreciation_rate: float) -> float:
         """Calculate BTC needed for given inflation and depreciation parameters."""
@@ -92,12 +95,14 @@ class InteractiveHeatmap:
     def create_interactive_heatmap(self, grid_size: int = 30) -> go.Figure:
         """Create the interactive heatmap visualization."""
         st.info("""
-        **How to Read This Heatmap:**
-        - **Darker colors** = Higher Bitcoin requirements
-        - **Lighter colors** = Lower Bitcoin requirements  
-        - **Hover anywhere** to see exact inflation rate, depreciation rate, and BTC needed
-        - **3 scenarios** calculated earlier are marked as colored circles
-        - **Click and zoom** to explore specific regions in detail
+
+        **How to Use This Heatmap:**
+
+        1. **Overview**: Dark red areas require more Bitcoin, blue areas require less
+        2. **Explore**: Hover anywhere to see exact inflation rate, depreciation rate, and BTC needed
+        3. **Compare**: See how your three scenarios (marked circles) relate to the full landscape
+        4. **Plan**: Identify economic conditions where your target Bitcoin amount is adequate
+        5. **Strategize**: Use risk zones to understand worst-case and best-case scenarios
         """)
 
         # Generate heatmap data
@@ -192,7 +197,7 @@ class InteractiveHeatmap:
         fig.update_layout(
 
             title=dict(
-                text=f"Bitcoin Requirements Across All Economic Scenarios<br>",
+                text=f"Bitcoin required for retirement across economic scenarios<br>",
                 font=dict(size=16),
             ),
 
@@ -229,69 +234,74 @@ class InteractiveHeatmap:
     def display_heatmap_insights(self):
         """Display insights about the heatmap patterns."""
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
 
         with col1:
 
-            st.success("""
+            st.info("""
 
-            **🟦 Blue Regions (Low BTC)**
-            - **Favorable Economic Conditions**
-            - Lower inflation rates (2-6%)
-            - Moderate currency depreciation (1-4%)
-            - **Requires less Bitcoin accumulation**
-            - Optimistic scenario for retirement planning
+            **🟦 Deep Blue Regions**
+                    
+            **Controlled domestic prices with exchange rate weakness**
+            - Low inflation rates (1-6%)
+                - Healthy food supply
+                - Softer global commodity prices(esp. oil)
+                - Productivity gains
+                - Effective price management via policies
+            - High currency depreciation rates (>5%)
+                - Very strong USD
+                - Persistent trade/current account deficits
+                - Capital outflows       
             """)
-
         with col2:
 
-            st.warning("""
-
-            **🟨 Yellow Regions (Moderate BTC)**
-            - **Balanced Economic Conditions**
-            - Moderate inflation rates (6-10%)
-            - Standard currency depreciation (4-7%)
-            - **Plan with standard scenarios**
-            - Conservative scenario for retirement planning
-            """)
+            st.info("""
+                    
+            **🟦 Light Blue Regions**    
+                    
+            **High domestic prices with exchange rate suppression**
+            - High inflation rates (6-10%)
+                - Volatile food supply
+                - Volatile global commodity prices (esp. oil)
+                - Robust domestic demand & credit growth
+                - Poor price management via policies
+            - Moderate currency depreciation rates (1 - 5%)
+                - Strong USD
+                - Capital inflows via FDI, remittances, etc.
+                - FX interventions to stabilize INR
+                """)
 
         with col3:
 
+            st.warning("""
+
+            **🟨 Yellow Regions**
+                       
+            **Strong domestic prices with exchange rate suppression**
+            - Very High Inflation Rates (12 - 15)%
+                - Food supply shocks
+                - Supply bottlenecks (domestic & interanational)
+                - Resilient domestic demand & credit growth
+            - Low currency depreciation rates (1 - 3%)
+                - FX interventions to stabilize INR
+                - Robust inflows via FDI, remittances, etc.    
+                - Capital controls
+            """)
+
+        with col4:
+
             st.error("""
-            **🟥 Red Regions (High BTC)**
-
-            - **Challenging Economic Conditions**
-            - High inflation rates (10-15%)
-            - Significant currency depreciation (7-10%)
-            - **Requires extra Bitcoin accumulation**
-            - Extreme scenario for retirement planning
-            """)
-
-    def display_pattern_analysis(self):
-        """Display analysis of patterns visible in the heatmap."""
-
-        st.markdown("### Pattern Analysis")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            st.markdown("""
-
-            **Key Patterns Visible:**
-            - **Upper-left corner (High inflation, Low depreciation)**: Domestic supply constraints with strong currency fundamentals
-            - **Lower-right corner (Low inflation, High depreciation)**: Currency crisis with controlled domestic prices
-            - **Diagonal bands**: Shows interaction between inflation and currency effects
-            """)
-
-        with col2:
-
-            st.markdown("""
-
-            **Strategic Insights:**
-            - **Sweet spot**: Lower-left region (low inflation + low depreciation)
-            - **Danger zone**: Upper-right region (high inflation + high depreciation) 
-            - **Currency dominance**: Vertical bands show depreciation has stronger impact
+            **🟥 Red Regions**
+                    
+            **Unanchored domestic price pressure with severe exchange rate suppression**
+            - Very High Inflation Rates (12 - 15)%
+                - Food supply shocks
+                - Supply bottlenecks (domestic & interanational)
+                - Resilient domestic demand & credit growth
+            - Very Low Currency Depreciation Rates (1)%
+                - Severe FX interventions to peg INR
+                - Robust inflows via FDI, remittances, etc
+                - Severe capital controls
             """)
 
     def display_scenario_comparison_on_heatmap(self):
@@ -313,7 +323,6 @@ class InteractiveHeatmap:
                 'Inflation Rate': f"{params['inflation']:.1f}%",
                 'USD Depreciation': f"{params['depreciation']:.1f}%",
                 'BTC Required': f"{btc_needed:.4f}",
-                'Risk Zone': self._get_risk_zone(params['inflation'], params['depreciation'])
             })
 
         df_scenarios = pd.DataFrame(scenario_data)
@@ -321,7 +330,7 @@ class InteractiveHeatmap:
         st.info("""
 
         **Scenario Positioning:**
-        - **Optimistic**: Positioned in the favorable blue-green zone
+        - **Optimistic**: Positioned in the favorable deep-blue zone
         - **Conservative**: Well-placed in the moderate yellow zone  
         - **Extreme**: Located in the challenging orange-red zone
         - **Coverage**: These three scenarios span the risk spectrum effectively
@@ -345,7 +354,7 @@ def display_interactive_heatmap_chart(current_age: int, annual_expenditure_inr: 
 
     """
 
-    with st.expander("**Interactive Parameter Heatmap** Click to learn more", expanded=False):
+    with st.expander("**Interactive Parameter Heatmap** Click to learn more", expanded=True):
 
         # Introduction
         st.markdown(f"""
@@ -368,15 +377,4 @@ def display_interactive_heatmap_chart(current_age: int, annual_expenditure_inr: 
 
         # Analysis sections
         heatmap.display_heatmap_insights()
-        heatmap.display_pattern_analysis()
         heatmap.display_scenario_comparison_on_heatmap()
-        st.info("""
-
-        **How to Use This Heatmap:**
-
-        1. **Overview**: Dark red areas require more Bitcoin, blue areas require less
-        2. **Explore**: Hover anywhere to see exact inflation rate, depreciation rate, and BTC needed
-        3. **Compare**: See how your three scenarios (marked circles) relate to the full landscape
-        4. **Plan**: Identify economic conditions where your target Bitcoin amount is adequate
-        5. **Strategize**: Use risk zones to understand worst-case and best-case scenarios
-        """)

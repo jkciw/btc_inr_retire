@@ -26,20 +26,20 @@ BITCOIN_CONFIG = {
 
 # Economic Scenarios Configuration
 SCENARIOS = {
-    'optimistic': {
-        'depreciation_rate': 0.030,
-        'inflation_rate': 0.065,
+    'Optimistic': {
+        'depreciation_rate': 0.050,
+        'inflation_rate': 0.06,
         'description': 'Best-case economic conditions',
         'color': '#28a745'  # Green
     },
-    'conservative': {
-        'depreciation_rate': 0.045,
+    'Conservative': {
+        'depreciation_rate': 0.03,
         'inflation_rate': 0.080,
         'description': 'Prudent retirement planning baseline',
         'color': '#ffc107'  # Yellow
     },
-    'extreme': {
-        'depreciation_rate': 0.060,
+    'Extreme': {
+        'depreciation_rate': 0.020,
         'inflation_rate': 0.100,
         'description': 'Worst-case stress testing',
         'color': '#dc3545'  # Red
@@ -87,7 +87,7 @@ INPUT_LIMITS = {
 CHART_CONFIG = {
     'colors': {
         'optimistic': '#28a745',
-        'conservative': '#ffc107', 
+        'conservative': '#ffc107',
         'extreme': '#dc3545',
         'btc_price': 'green'
     },

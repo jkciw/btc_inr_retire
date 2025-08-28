@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from datetime import datetime
-from calculations import bitcoin_power_law_price
+from calculations import bitcoin_power_law_price, bitcoin_power_law_price_percentile
 
 
 class PowerLawChart:
@@ -42,7 +42,10 @@ class PowerLawChart:
             'grid': 'rgba(128,128,128,0.3)',  # Subtle grid
             'text': '#FFFFFF',             # White text for dark mode
             'legend_bg': 'rgba(0,0,0,0.8)',  # Dark legend background
-            'annotation': '#888888'        # Gray annotations
+            'annotation': '#888888',        # Gray annotations
+            'optimistic': '#9C27B0',      # Bright purple
+            'resistance_1': '#995c00',
+            'resistance_2': '#1affc6'
         }
 
     def load_bitcoin_data(self):
@@ -92,58 +95,33 @@ class PowerLawChart:
 
         return yearly_prices
 
-    def get_sampled_data(self, sample_days=60):
+    def get_all_daily_data(self):
         """
-        Get sampled Bitcoin price data for smooth chart plotting.
-        Args:
-            sample_days: Sample every N days to reduce data points
+        Get all available daily close price data for plotting
+
         Returns:
-            tuple: (years_float, prices) for plotting
+            tuple: (date, prices) for plotting
         """
         if self.btc_data is None:
             return [], []
 
-        # Sample every N days
-        sampled_df = self.btc_data.iloc[::sample_days]
-
-        # Convert to years (as float for smooth plotting)
-        years = []
+        dates = []
         prices = []
 
-        for _, row in sampled_df.iterrows():
+        for _, row in self.btc_data.iterrows():
             date = row['timeClose']
-            year_float = date.year + (date.month - 1) / \
-                12 + (date.day - 1) / 365
-            years.append(year_float)
+
+            # Handle timezone aware dates
+            if hasattr(date, 'tz') and date.tz is not None:
+                # Remove timezone for calculation
+                date_local = date.tz_localize(None)
+            else:
+                date_local = date
+
+            dates.append(date_local)
             prices.append(row['close'])
 
-        return years, prices
-
-    def generate_power_law_data(self, start_year=2010, end_year=2051):
-        """
-        Generate power law trendline and 2.5th percentile data.
-        Args:
-            start_year: Start year for projections
-            end_year: End year for projections
-        Returns:
-            pd.DataFrame: Power law data with years, trendline, and conservative prices
-        """
-        years = np.arange(start_year, end_year)
-        chart_data = []
-
-        for year in years:
-            date = datetime(year, 1, 1)
-            days = (date - self.genesis_date).days
-            trendline, percentile = bitcoin_power_law_price(days)
-
-            chart_data.append({
-                'Year': year,
-                'Days': days,
-                'Trendline': trendline,
-                'Conservative (2.5th)': percentile
-            })
-
-        return pd.DataFrame(chart_data)
+        return dates, prices
 
     def calculate_success_metrics(self, power_law_df, yearly_prices):
         """
@@ -162,7 +140,7 @@ class PowerLawChart:
             if year <= current_year:
                 year_data = power_law_df[power_law_df['Year'] == year]
                 if not year_data.empty:
-                    conservative_price = year_data['Conservative (2.5th)'].iloc[0]
+                    conservative_price = year_data['2.5th'].iloc[0]
                     actual_price = yearly_prices[year]
                     total_years += 1
                     if actual_price >= conservative_price:
@@ -194,9 +172,9 @@ class PowerLawChart:
 
     def create_power_law_chart(self):
         """
-        Create the interactive power law chart with historical data overlay - Dark mode compatible.
+        Create the interactive power law chart with historical data overlay
         Returns:
-            plotly.graph_objects.Figure: The power law chart optimized for both light and dark themes
+            plotly.graph_objects.Figure: The power law chart 
         """
         # Load data
         if self.btc_data is None:
@@ -212,30 +190,27 @@ class PowerLawChart:
         # Get all necessary data
         power_law_df = self.generate_power_law_data()
         yearly_prices = self.get_yearly_prices()
-        sampled_years, sampled_prices = self.get_sampled_data(sample_days=60)
+        daily_dates, daily_prices = self.get_all_daily_data()
+        first_date = datetime(2009, 3, 1)
+        last_date = datetime(2051, 1, 1)
 
         # Create the chart
         fig = go.Figure()
 
         # Add sampled historical Bitcoin price line
-        if len(sampled_years) > 0:
+        if len(daily_dates) > 0:
             fig.add_trace(go.Scatter(
-                x=sampled_years,
-                y=sampled_prices,
+                x=daily_dates,
+                y=daily_prices,
                 mode='lines',
                 name='Actual Bitcoin Price',
-                line=dict(color=colors['actual_price'], width=2),
+                line=dict(width=4),
                 opacity=0.9,
-                hovertemplate="<b>Actual Bitcoin Price</b><br>Date: %{x:.1f}<br>Price: $%{y:,.2f}<extra></extra>",
+                hovertemplate="<b>Actual Bitcoin Price</b><br>Date: %{x|%b %d, %Y}<br>Price: $%{y:,.2f}<extra></extra>",
                 showlegend=True
             ))
 
         # Add yearly price markers
-        if yearly_prices:
-            current_year = datetime.now().year
-            years_filtered = [y for y in sorted(
-                yearly_prices.keys()) if y <= current_year]
-            prices_filtered = [yearly_prices[y] for y in years_filtered]
 
         # Add power law trendline
         fig.add_trace(go.Scatter(
@@ -243,18 +218,48 @@ class PowerLawChart:
             y=power_law_df['Trendline'],
             mode='lines',
             name='Power Law Trendline',
-            line=dict(color=colors['trendline'], width=3),
+            line=dict(width=3),
             hovertemplate="<b>Power Law Trendline</b><br>Year: %{x}<br>Price: $%{y:,.0f}<extra></extra>"
         ))
 
         # Add 2.5th percentile line
         fig.add_trace(go.Scatter(
             x=power_law_df['Year'],
-            y=power_law_df['Conservative (2.5th)'],
+            y=power_law_df['2.5th'],
             mode='lines',
             name='2.5th Percentile (Conservative)',
-            line=dict(color=colors['conservative'], width=3, dash='dash'),
+            line=dict(width=2, dash='dash'),
             hovertemplate="<b>Conservative Support Line</b><br>Year: %{x}<br>Price: $%{y:,.0f}<extra></extra>"
+        ))
+
+        # Add 16.5th percentile line
+        fig.add_trace(go.Scatter(
+            x=power_law_df['Year'],
+            y=power_law_df['16.5th'],
+            mode='lines',
+            name='16.5th Percentile (optimistic)',
+            line=dict(width=2, dash='dash'),
+            hovertemplate="<b>Optimistic Support Line</b><br>Year: %{x}<br>Price: $%{y:,.0f}<extra></extra>"
+        ))
+
+        # Add 83.5th percentile line
+        fig.add_trace(go.Scatter(
+            x=power_law_df['Year'],
+            y=power_law_df['83.5th'],
+            mode='lines',
+            name='83.5th Percentile (resistance 1)',
+            line=dict(width=2, dash='dash'),
+            hovertemplate="<b>Conservative Accumulation Line</b><br>Year: %{x}<br>Price: $%{y:,.0f}<extra></extra>"
+        ))
+
+        # Add 97.5th percentile line
+        fig.add_trace(go.Scatter(
+            x=power_law_df['Year'],
+            y=power_law_df['97.5th'],
+            mode='lines',
+            name='97.5th Percentile (resistance 2)',
+            line=dict(width=2, dash='dash'),
+            hovertemplate="<b>Extreme Accumulation Line</b><br>Year: %{x}<br>Price: $%{y:,.0f}<extra></extra>"
         ))
 
         # Add vertical line for current year
@@ -275,7 +280,6 @@ class PowerLawChart:
             )
         )
 
-        # Update layout with dark mode compatibility
         fig.update_layout(
             title=dict(
                 text="Bitcoin Power Law: 15+ Years of Real Market Data Validation",
@@ -288,39 +292,26 @@ class PowerLawChart:
             showlegend=True,
             legend=dict(
                 yanchor="bottom",
-                y=0.02,
-                xanchor="left",
-                x=0.04,
-                bgcolor=colors['legend_bg'],
-                bordercolor=colors['annotation'],
-                borderwidth=1,
-                font=dict(color=colors['text'])
+                y=0,
+                xanchor="right",
+                x=1,
             ),
             hovermode='x unified',
-            plot_bgcolor=colors['background'],
-            paper_bgcolor=colors['background'],
-            font=dict(color=colors['text'])
         )
 
         # Update axes with proper parameter structure
         fig.update_xaxes(
             showgrid=True,
             gridwidth=1,
-            gridcolor=colors['grid'],
-            zerolinecolor=colors['grid'],
-            tickfont=dict(color=colors['text']),
-            # FIXED: Proper title structure
-            title=dict(font=dict(color=colors['text']))
+            tickformat="%Y",
+            title=dict(text="Date"),
+            range=[first_date, last_date]
         )
 
         fig.update_yaxes(
+            type="log",
             showgrid=True,
             gridwidth=1,
-            gridcolor=colors['grid'],
-            zerolinecolor=colors['grid'],
-            tickfont=dict(color=colors['text']),
-            # FIXED: Proper title structure
-            title=dict(font=dict(color=colors['text']))
         )
 
         return fig
@@ -342,7 +333,7 @@ class PowerLawChart:
             current_data = power_law_df[power_law_df['Year'] == current_year]
 
             if not current_data.empty:
-                current_conservative = current_data['Conservative (2.5th)'].iloc[0]
+                current_conservative = current_data['2.5th'].iloc[0]
                 current_trendline = current_data['Trendline'].iloc[0]
                 current_actual = metrics['latest_price']
                 if current_actual:
@@ -350,10 +341,9 @@ class PowerLawChart:
                 st.success(f"""
                 **Power Law Analysis as on 1st Jan {current_year}:**
                 - **Trend Line**: ${current_data['Trendline'].iloc[0]:,.0f}
-                - **Conservative (2.5th)**: ${current_data['Conservative (2.5th)'].iloc[0]:,.0f}
-                - **Market Price**: ${metrics['latest_price']:,} (real market price)
-                - **Safety Multiple**: ${multiplier:.1f}x above conservative line
-                - **Built-in Buffer**: 76% safety margin below trendline
+                - **Conservative (2.5th)**: ${current_data['2.5th'].iloc[0]:,.0f}
+                - **Market Price**: ${metrics['latest_price']:,.0f} (real market price)
+                - **Safety Multiple**: {multiplier:.1f}x above conservative line
                 """)
 
         with col2:
@@ -361,7 +351,7 @@ class PowerLawChart:
             **Real Data:**
             - **Data Points**: {metrics['total_data_points']:,} days of actual prices
             - **Time Span**: {metrics['data_span_years']:.1f} years of continuous data
-            - **Latest Price**: ${metrics['latest_price']:,} (real market data)
+            - **Latest Price**: ${metrics['latest_price']:,.0f} (real market data)
             """)
 
     def display_data_summary(self):
@@ -375,63 +365,104 @@ class PowerLawChart:
         """
         Display the complete power law chart content section with theory and visualization.
         """
-        with st.expander("**Curious about the Power Law Model?** Click to learn more", expanded=False):
-            # Theory section
-            st.markdown("""
-            ### What is Bitcoin's Power Law?
-            
-            Bitcoin's price has followed a mathematical **power law** since its inception in 2009. This model shows that Bitcoin's price grows predictably over time according to the formula:
-            
-            **Price = 1.42×10⁻¹⁷ × (Days since Genesis)^5.79**
-            
-            ### Why Use the 2.5th Percentile?
-            
-            While Bitcoin's price fluctuates dramatically, it has historically stayed **above the 2.5th percentile support line** approximately **97.5% of the time**. This makes it an excellent **conservative baseline** for retirement planning.
-            """)
 
-            # Load data and create visualization
-            with st.spinner("Loading historical Bitcoin data from CSV..."):
-                if self.load_bitcoin_data() is not None:
-                    st.markdown(
-                        "####  Interactive Power Law Model with Real Historical Data")
+        # Theory section
+        st.markdown("""
+        ### What is Bitcoin's Power Law?
+        
+        Bitcoin's price has followed a mathematical **power law** since its inception in 2009. This model shows that Bitcoin's price grows predictably over time according to the formula:
+        
+        **Price = 1.42×10⁻¹⁷ × (Days since Genesis)^5.79**
+        
+        ### What are the percentile lines ?
+                    
+        The percentile lines are empirically-derived confidence bands calculated from 15+ years of real Bitcoin price data. Each line represents the historical boundary where Bitcoin's price has stayed above that percentile a specific percentage of time:
+        - 2.5th percentile: Bitcoin has traded above this line 97.5% of the time
+        - 16.5th percentile: Bitcoin has traded above this line 83.5% of the time
+        - 83.5th percentile: Bitcoin has traded above this line 16.5% of the time
+        - 97.5th percentile: Bitcoin has traded above this line 2.5% of the time
+        
+        ### Why use the 2.5th Percentile?
+        
+        While Bitcoin's price fluctuates, it has historically stayed **above the 2.5th percentile support line** approximately **97.5% of the time**. This makes it an excellent **conservative baseline** for retirement planning.
+                    
+        ### Why use the 97.5th Percentile?
+        When calculating monthly SIP amounts, using the higher percentile trend line 97.5 ensures you will accumulate enough Bitcoins quickly since the actual price will be lower 97.5% of the time.
+        """)
 
-                    # Create and display the chart
-                    fig = self.create_power_law_chart()
-                    if fig:
-                        st.plotly_chart(fig, use_container_width=True)
+        # Load data and create visualization
+        with st.spinner("Loading historical Bitcoin data from CSV..."):
+            if self.load_bitcoin_data() is not None:
+                st.markdown(
+                    "####  Interactive Power Law Model with Real Historical Data")
 
-                        # Display insights
-                        self.display_chart_insights()
+                # Create and display the chart
+                fig = self.create_power_law_chart()
+                if fig:
+                    st.plotly_chart(
+                        fig, use_container_width=True, theme="streamlit")
 
-                        # Chart explanation with improved colors mention
-                        st.markdown("""
-                        **Chart Insights (Based on Real Bitcoin Market Data):**
-                        
-                        - **🟢 Green Line**: Actual Bitcoin price from historical database (sampled every 60 days)
-                        - **🔵 Blue Line**: Power law trendline - the mathematical bitcoin price trend line  
-                        - **🔴 Red Dashed Line**: 2.5th percentile support - our ultra-conservative retirement baseline
-                        - **📊 Gray Divider**: Current year - separating 15+ years of historical data from future projections
-                        
-                        The 2.5th percentile (red dashed line) provides a **conservative safety margin** that has been breached less than 2.5% of the time in real market history.
-                        """)
+                    # Display insights
+                    self.display_chart_insights()
 
-                        # Data summary
-                        self.display_data_summary()
-                else:
-                    st.error(
-                        "Could not load historical Bitcoin data. Please ensure the CSV file is available.")
+                    # Chart explanation with improved colors mention
+                    st.markdown("""
+                    **Chart Insights (Based on Real Bitcoin Market Data):**
+                    
+                    - **🟢 Green Line**: Actual Bitcoin price from historical database (sampled every 60 days)
+                    - **🔵 Blue Line**: Power law trendline - the mathematical bitcoin price trend line  
+                    - **🔴 Red Dashed Line**: 2.5th percentile support - our ultra-conservative retirement baseline
+                    - **📊 Gray Divider**: Current year - separating 15+ years of historical data from future projections
+                    
+                    The 2.5th percentile (red dashed line) provides a **conservative safety margin** that has been breached less than 2.5% of the time in real market history.
+                    """)
 
-            # Benefits section
-            st.markdown("""
-            ### Key Takeaways for Retirement Planning:
-            
-            - **📈 Proven Track Record**: Real market data proves the power law works for 15+ years
-            - **🛡️ Conservative Safety Margin**: 2.5th percentile provides protection against downside
-            - **📊 Mathematical Reliability**: R² > 95% correlation with actual Bitcoin prices
-            - **⚡ Future Projections**: Model extends reliably into your retirement years
-            
-            **Bottom Line**: The chart above uses **real Bitcoin price data from 2010-2025** proving that Bitcoin has followed this mathematical model for over 15 years. By using the 2.5th percentile, we're planning with prices that Bitcoin has historically exceeded 97.5% of the time - giving you an incredibly solid foundation for retirement planning.
-            """)
+                    # Data summary
+                    self.display_data_summary()
+            else:
+                st.error(
+                    "Could not load historical Bitcoin data. Please ensure the CSV file is available.")
+
+        # Benefits section
+        st.markdown("""
+        ### Key Takeaways for Retirement Planning:
+        
+        - **Proven Track Record**: Real market data proves the power law works for 15+ years
+        - **Conservative Safety Margin**: 2.5th percentile provides protection against downside
+        - **Mathematical Reliability**: R² > 95% correlation with actual Bitcoin prices
+        - **Future Projections**: Model extends reliably into your retirement years
+        
+        **Bottom Line**: The chart above uses **real Bitcoin price data from 2010-2025** proving that Bitcoin has followed this mathematical model for over 15 years. By using the 2.5th percentile, we're planning with prices that Bitcoin has historically exceeded 97.5% of the time - giving you an incredibly solid foundation for retirement planning.
+        """)
+
+    def generate_power_law_data(self, start_year=2010, end_year=2051):
+        years = np.arange(start_year, end_year)
+        chart_data = []
+        for year in years:
+            date = datetime(year, 1, 1)
+            days = (date - self.genesis_date).days
+
+            # Trendline
+            trendline = bitcoin_power_law_price(days)[0]
+
+            # Rolling-fit percentiles
+            p2_5 = bitcoin_power_law_price_percentile(days,  2.5)
+            p16_5 = bitcoin_power_law_price_percentile(days, 16.5)
+            p50 = bitcoin_power_law_price_percentile(days, 50.0)
+            p83_5 = bitcoin_power_law_price_percentile(days, 83.5)
+            p97_5 = bitcoin_power_law_price_percentile(days, 97.5)
+
+            chart_data.append({
+                'Year': year,
+                'Days': days,
+                'Trendline': trendline,
+                '2.5th':  p2_5,
+                '16.5th': p16_5,
+                '50th':   p50,
+                '83.5th': p83_5,
+                '97.5th': p97_5
+            })
+        return pd.DataFrame(chart_data)
 
 
 # Convenience function for easy import

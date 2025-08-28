@@ -43,41 +43,27 @@ def display_scenario_comparison(scenario_results: Dict[str, Any], retirement_yea
 
         comparison_data.append({
             'Scenario': scenario_name,
-            'BTC Needed': f"{results['total_bitcoin_needed']:.4f}",
-            'Retirement Corpus Needed (₹)': f"₹{indian_commas(results['total_inr_needed'], 0)}",
             'Inflation Rate': f"{params['inflation_rate']*100:.1f}%",
-            'Annual Expenditure at retirement (₹)': f"₹{indian_commas(annual_expenditure_at_retirement, 0)}",
-            'USD Depreciation Rate': f"{params['depreciation_rate']*100:.1f}%",
+            'USD/INR Depreciation Rate': f"{params['depreciation_rate']*100:.1f}%",
+            'BTC Needed': f"{results['total_bitcoin_needed']:.4f}",
             'USD/INR at retirement': f"₹{usd_inr_retirement:.0f}",
+            'Annual Expenditure at retirement (₹)': f"₹{indian_commas(annual_expenditure_at_retirement, 0)}",
+            'Retirement Corpus Needed (₹)': f"₹{indian_commas(results['total_inr_needed'], 0)}",
         })
 
     comparison_df = pd.DataFrame(comparison_data)
-    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
-
-    # Recommendations
-    conservative_btc = scenario_results['conservative']['total_bitcoin_needed']
-    extreme_btc = scenario_results['extreme']['total_bitcoin_needed']
-
-    st.markdown("### Recommendations")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric(
-            label="Primary Target",
-            value=f"{conservative_btc:.4f} BTC",
-            help="Conservative scenario - recommended planning baseline"
-        )
-
-    with col2:
-        st.metric(
-            label="Stress Test",
-            value=f"{extreme_btc:.4f} BTC",
-            help="Extreme scenario - worst-case protection"
-        )
-
-    with col3:
-        st.metric(
-            label="Extra Buffer",
-            value=f"{extreme_btc - conservative_btc:.4f} BTC",
-            help="Additional BTC needed for extreme scenario protection"
-        )
+    comparison_df.columns = [
+        "Scenario",
+        "Assumed <br> Inflation<br>Rate",
+        "Assumed <br> USD/INR Depreciation<br>Rate",
+        "Calculated <br> BTC Needed",
+        "Calculated <br> USD/INR at retirement",
+        "Calculated <br> Annual Expenditure<br>at retirement (₹)",
+        "Calculated <br>Retirement Corpus<br>Needed (₹)"
+    ]
+    # st.table(display_df)
+    styler = comparison_df.style.hide(axis="index")
+    styler = styler.set_table_attributes(
+        'style="text-align: center; margin: auto;"')
+    styled_html = styler.to_html(escape=False)
+    st.markdown(styled_html, unsafe_allow_html=True)
