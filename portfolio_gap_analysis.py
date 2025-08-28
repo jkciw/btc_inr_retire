@@ -85,13 +85,14 @@ class PortfolioGapAnalysis:
             "### Enter Your Exisitng Bitcoins Earmarked for Retirement")
 
         current_btc = st.number_input(
-            "",
+            "Bitcoin Holdings",
             min_value=0.0,
             max_value=100.0,
             value=0.0,
             step=0.001,
             format="%.6f",
-            help="Enter the amount of Bitcoin you currently have specifically for retirement planning"
+            help="Enter the amount of Bitcoin you currently have specifically for retirement planning",
+            label_visibility="hidden",
         )
 
         return current_btc
