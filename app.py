@@ -41,10 +41,17 @@ def main():
         st.session_state.show_results = False
 
     # Initialize percentiles
-    try:
-        initialize_percentiles_from_csv("coinmcap_consolidated.csv")
-    except Exception as e:
-        st.error(f"Error initializing percentiles")
+    if 'percentiles_initialized' not in st.session_state:
+        with st.spinner("Loading Bitcoin power law data (one-time setup)..."):
+            try:
+                initialize_percentiles_from_csv("coinmcap_consolidated.csv")
+                st.session_state.percentiles_initialized = True
+
+            except Exception as e:
+                st.error(f"Error initializing percentiles: {e}")
+                st.session_state.percentiles_initialized = False
+                # Stop execution if percentiles fail to load
+                st.stop()
 
     st.title("₿ Bitcoin Retirement Calculator")
     st.markdown(
