@@ -397,7 +397,7 @@ class PortfolioGapAnalysis:
             with col1:
                 st.info("""
                 **🟢 Optimistic Scenario**
-                - USD/INR depreciates 5% annually
+                - USD/INR appreciates 5% annually
                 - Bitcoin follows power law trendline
                 - SIP planning based on hopeful outlook 
                 - Slowest path to reach target
@@ -406,7 +406,7 @@ class PortfolioGapAnalysis:
             with col2:
                 st.warning("""
                 **🟡 Conservative Scenario**  
-                - USD/INR depreciates 3% annually
+                - USD/INR appreciates 3% annually
                 - Bitcoin follows 83.5th percentile price
                 - SIP planning based on realistic outlook
                 - Balanced path to reach target
@@ -415,7 +415,7 @@ class PortfolioGapAnalysis:
             with col3:
                 st.error("""
                 **🔴 Extreme Scenario**
-                - USD/INR depreciates 2% annually  
+                - USD/INR appreciates 2% annually  
                 - Bitcoin at 97.5th percentile price
                 - SIP planning based on pessimistic outlook
                 - Fastest path to reach target
