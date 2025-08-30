@@ -27,19 +27,19 @@ BITCOIN_CONFIG = {
 # Economic Scenarios Configuration
 SCENARIOS = {
     'Optimistic': {
-        'depreciation_rate': 0.050,
+        'usd_appreciation_rate': 0.050,
         'inflation_rate': 0.06,
         'description': 'Best-case economic conditions',
         'color': '#28a745'  # Green
     },
     'Conservative': {
-        'depreciation_rate': 0.03,
+        'usd_appreciation_rate': 0.03,
         'inflation_rate': 0.080,
         'description': 'Prudent retirement planning baseline',
         'color': '#ffc107'  # Yellow
     },
     'Extreme': {
-        'depreciation_rate': 0.020,
+        'usd_appreciation_rate': 0.020,
         'inflation_rate': 0.100,
         'description': 'Worst-case stress testing',
         'color': '#dc3545'  # Red

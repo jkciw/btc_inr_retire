@@ -13,7 +13,6 @@ import pandas as pd
 from datetime import datetime
 from typing import Tuple, Dict, Any, Optional, List
 import statsmodels.api as sm
-import streamlit as st
 from config import SCENARIOS
 
 
@@ -339,24 +338,24 @@ def get_percentile_multipliers() -> Optional[Dict[float, float]]:
 
 
 def calculate_usd_inr_rate(years_from_current: int, base_rate: float = 83.0,
-                           depreciation_rate: float = 0.045) -> float:
+                           usd_appreciation_rate: float = 0.045) -> float:
     """
-    Calculate future USD/INR exchange rate based on depreciation.
+    Calculate future USD/INR exchange rate based on appreciation.
 
     Args:
         years_from_current: Number of years from current date
         base_rate: Current USD/INR rate
-        depreciation_rate: Annual depreciation rate (default 4.5%)
+        usd_appreciation_rate: Annual dappreciation rate of USD against INR(default 4.5%)
 
     Returns:
         Future USD/INR exchange rate
     """
-    return base_rate * (1 + depreciation_rate) ** years_from_current
+    return base_rate * (1 + usd_appreciation_rate) ** years_from_current
 
 
 def get_scenario_parameters(scenario_type: str) -> Dict[str, Any]:
     """
-    Returns depreciation and inflation parameters for different scenarios.
+    Returns USD/INR appreciation and inflation parameters for different scenarios.
 
     Args:
         scenario_type: 'optimistic', 'conservative', or 'extreme'
@@ -369,7 +368,7 @@ def get_scenario_parameters(scenario_type: str) -> Dict[str, Any]:
 
 def calculate_single_scenario(current_age: int, retirement_year: int,
                               years_to_retirement: int, years_in_retirement: int,
-                              annual_expenditure_inr: float, depreciation_rate: float,
+                              annual_expenditure_inr: float, usd_appreciation_rate: float,
                               inflation_rate: float, genesis_date: datetime) -> Dict[str, Any]:
     """
     Calculate Bitcoin needs for a single retirement scenario using empirically derived percentiles.
@@ -380,7 +379,7 @@ def calculate_single_scenario(current_age: int, retirement_year: int,
         years_to_retirement: Years until retirement
         years_in_retirement: Expected years in retirement
         annual_expenditure_inr: Current annual expenditure in INR
-        depreciation_rate: USD/INR depreciation rate
+        usd_appreciation_rate: USD/INR appreciation rate
         inflation_rate: Annual inflation rate
         genesis_date: Bitcoin genesis date
 
@@ -390,7 +389,7 @@ def calculate_single_scenario(current_age: int, retirement_year: int,
     # Calculate exchange rate for retirement year
     years_from_current = retirement_year - datetime.now().year
     retirement_usd_inr = calculate_usd_inr_rate(
-        years_from_current, depreciation_rate=depreciation_rate)
+        years_from_current, usd_appreciation_rate=usd_appreciation_rate)
 
     # Calculate annual expenditure at retirement
     annual_expenditure_at_retirement_inr = annual_expenditure_inr * \
@@ -410,7 +409,8 @@ def calculate_single_scenario(current_age: int, retirement_year: int,
         _, btc_price_2_5_usd = bitcoin_power_law_price(days_since_genesis)
 
         # Calculate exchange rate for this year (continues depreciating)
-        current_usd_inr = retirement_usd_inr * (1 + depreciation_rate) ** year
+        current_usd_inr = retirement_usd_inr * \
+            (1 + usd_appreciation_rate) ** year
 
         # Calculate annual expenditure with inflation
         this_year_expense_inr = annual_expenditure_at_retirement_inr * \
@@ -480,13 +480,13 @@ def calculate_retirement_bitcoin_needs_scenarios(current_age: int,
     scenario_results = {}
     for scenario_name in ['Optimistic', 'Conservative', 'Extreme']:
         scenario_params = get_scenario_parameters(scenario_name)
-        depreciation_rate = scenario_params['depreciation_rate']
+        usd_appreciation_rate = scenario_params['usd_appreciation_rate']
         inflation_rate = scenario_params['inflation_rate']
 
         # Calculate scenario-specific results
         result = calculate_single_scenario(
             current_age, retirement_year, years_to_retirement, years_in_retirement,
-            annual_expenditure_inr, depreciation_rate, inflation_rate, genesis_date
+            annual_expenditure_inr, usd_appreciation_rate, inflation_rate, genesis_date
         )
 
         scenario_results[scenario_name] = {

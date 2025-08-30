@@ -38,13 +38,13 @@ def display_scenario_comparison(scenario_results: Dict[str, Any], retirement_yea
         # Calculate USD/INR at retirement year for reference
         years_to_retirement = retirement_year - datetime.now().year
         usd_inr_retirement = base_rate * \
-            (1 + params['depreciation_rate']) ** years_to_retirement
+            (1 + params['usd_appreciation_rate']) ** years_to_retirement
         annual_expenditure_at_retirement = results['annual_expenditure_at_retirement']
 
         comparison_data.append({
             'Scenario': scenario_name,
             'Inflation Rate': f"{params['inflation_rate']*100:.1f}%",
-            'USD/INR Depreciation Rate': f"{params['depreciation_rate']*100:.1f}%",
+            'USD/INR Appreciation Rate': f"{params['usd_appreciation_rate']*100:.1f}%",
             'BTC Needed': f"{results['total_bitcoin_needed']:.4f}",
             'USD/INR at retirement': f"₹{usd_inr_retirement:.0f}",
             'Annual Expenditure at retirement (₹)': f"₹{indian_commas(annual_expenditure_at_retirement, 0)}",
@@ -55,7 +55,7 @@ def display_scenario_comparison(scenario_results: Dict[str, Any], retirement_yea
     comparison_df.columns = [
         "Scenario",
         "Assumed <br> Inflation<br>Rate",
-        "Assumed <br> USD/INR Depreciation<br>Rate",
+        "Assumed <br> USD/INR Appreciation<br>Rate",
         "Calculated <br> BTC Needed",
         "Calculated <br> USD/INR at retirement",
         "Calculated <br> Annual Expenditure<br>at retirement (₹)",

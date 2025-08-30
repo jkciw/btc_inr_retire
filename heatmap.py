@@ -37,12 +37,12 @@ class InteractiveHeatmap:
         for name, params in SCENARIOS.items():
             self.scenarios[name] = {
                 'inflation': params['inflation_rate'] * 100,
-                'depreciation': params['depreciation_rate'] * 100,
+                'usd_appreciation': params['usd_appreciation_rate'] * 100,
                 'color': params['color']
             }
 
-    def calculate_btc_for_parameters(self, inflation_rate: float, depreciation_rate: float) -> float:
-        """Calculate BTC needed for given inflation and depreciation parameters."""
+    def calculate_btc_for_parameters(self, inflation_rate: float, usd_appreciation_rate: float) -> float:
+        """Calculate BTC needed for given inflation and USD/INR appreciation parameters."""
 
         if self.years_in_retirement <= 0:
             return 0.0
@@ -53,7 +53,7 @@ class InteractiveHeatmap:
                 self.years_to_retirement,
                 self.years_in_retirement,
                 self.annual_expenditure_inr,
-                depreciation_rate,
+                usd_appreciation_rate,
                 inflation_rate,
                 self.genesis_date
             )
@@ -67,7 +67,8 @@ class InteractiveHeatmap:
 
         # Create parameter ranges
         inflation_rates = np.linspace(0.02, 0.15, grid_size)  # 2% to 15%
-        depreciation_rates = np.linspace(0.01, 0.10, grid_size)  # 1% to 10%
+        usd_appreciation_rates = np.linspace(
+            0.01, 0.10, grid_size)  # 1% to 10%
 
         # Initialize BTC requirements grid
         btc_grid = np.zeros((grid_size, grid_size))
@@ -80,9 +81,9 @@ class InteractiveHeatmap:
         # Calculate BTC requirements for each combination
         calculation_count = 0
         for i, inflation_rate in enumerate(inflation_rates):
-            for j, depreciation_rate in enumerate(depreciation_rates):
+            for j, usd_appreciation_rate in enumerate(usd_appreciation_rates):
                 btc_grid[j, i] = self.calculate_btc_for_parameters(
-                    inflation_rate, depreciation_rate)
+                    inflation_rate, usd_appreciation_rate)
                 calculation_count += 1
                 progress = calculation_count / total_calculations
                 progress_bar.progress(progress)
@@ -90,7 +91,7 @@ class InteractiveHeatmap:
                     f"Calculating heatmap... {calculation_count}/{total_calculations} ({progress:.1%})")
         progress_bar.empty()
         progress_text.empty()
-        return inflation_rates, depreciation_rates, btc_grid
+        return inflation_rates, usd_appreciation_rates, btc_grid
 
     def create_interactive_heatmap(self, grid_size: int = 30) -> go.Figure:
         """Create the interactive heatmap visualization."""
@@ -99,7 +100,7 @@ class InteractiveHeatmap:
         **How to Use This Heatmap:**
 
         1. **Overview**: Dark red areas require more Bitcoin, blue areas require less
-        2. **Explore**: Hover anywhere to see exact inflation rate, depreciation rate, and BTC needed
+        2. **Explore**: Hover anywhere to see exact inflation rate, USD/INR appreciation rate, and BTC needed
         3. **Compare**: See how your three scenarios (marked circles) relate to the full landscape
         4. **Plan**: Identify economic conditions where your target Bitcoin amount is adequate
         5. **Strategize**: Use risk zones to understand worst-case and best-case scenarios
@@ -107,12 +108,12 @@ class InteractiveHeatmap:
 
         # Generate heatmap data
         with st.spinner("Generating interactive heatmap for all parameter combinations..."):
-            inflation_rates, depreciation_rates, btc_grid = self.generate_heatmap_data(
+            inflation_rates, usd_appreciation_rates, btc_grid = self.generate_heatmap_data(
                 grid_size)
 
         # Convert to percentages for display
         inflation_pct = inflation_rates * 100
-        depreciation_pct = depreciation_rates * 100
+        appreciation_pct = usd_appreciation_rates * 100
 
         # Create the heatmap
         fig = go.Figure()
@@ -121,14 +122,14 @@ class InteractiveHeatmap:
         fig.add_trace(go.Heatmap(
             z=btc_grid,
             x=inflation_pct,
-            y=depreciation_pct,
+            y=appreciation_pct,
 
             # Red-Yellow-Blue reversed (red = high, blue = low)
             colorscale='RdYlBu_r',
             hovertemplate=(
                 "<b>Economic Parameters</b><br>" +
                 "Inflation Rate: %{x:.1f}%<br>" +
-                "USD Depreciation Rate: %{y:.1f}%<br>" +
+                "USD/INR Appreciation Rate: %{y:.1f}%<br>" +
                 "Bitcoin Required: %{z:.4f} BTC<br>" +
                 "<extra></extra>"
             ),
@@ -146,7 +147,7 @@ class InteractiveHeatmap:
 
         scenario_x = [self.scenarios[name]['inflation']
                       for name in self.scenarios]
-        scenario_y = [self.scenarios[name]['depreciation']
+        scenario_y = [self.scenarios[name]['usd_appreciation']
                       for name in self.scenarios]
         scenario_names = ['Optimistic', 'Conservative', 'Extreme']
         scenario_colors = [self.scenarios[name]['color']
@@ -158,7 +159,7 @@ class InteractiveHeatmap:
         for name in self.scenarios:
             btc = self.calculate_btc_for_parameters(
                 self.scenarios[name]['inflation'] / 100,
-                self.scenarios[name]['depreciation'] / 100
+                self.scenarios[name]['usd_appreciation'] / 100
             )
             scenario_btc.append(btc)
 
@@ -183,7 +184,7 @@ class InteractiveHeatmap:
             hovertemplate=(
                 "<b>%{text} Scenario</b><br>" +
                 "Inflation Rate: %{x:.1f}%<br>" +
-                "USD Depreciation Rate: %{y:.1f}%<br>" +
+                "USD/INR Appreciation Rate: %{y:.1f}%<br>" +
                 "Bitcoin Required: %{customdata:.4f} BTC<br>" +
                 "<extra></extra>"
             ),
@@ -211,7 +212,7 @@ class InteractiveHeatmap:
 
             yaxis=dict(
 
-                title="USD/INR Annual Depreciation Rate (%)",
+                title="USD/INR Annual Appreciation Rate (%)",
                 range=[1, 10],
                 tickmode='linear',
                 tick0=1,
@@ -248,7 +249,7 @@ class InteractiveHeatmap:
                 - Softer global commodity prices(esp. oil)
                 - Productivity gains
                 - Effective price management via policies
-            - High currency depreciation rates (>5%)
+            - High currency appreciation rates (>5%)
                 - Very strong USD
                 - Persistent trade/current account deficits
                 - Capital outflows       
@@ -265,7 +266,7 @@ class InteractiveHeatmap:
                 - Volatile global commodity prices (esp. oil)
                 - Robust domestic demand & credit growth
                 - Poor price management via policies
-            - Moderate currency depreciation rates (1 - 5%)
+            - Moderate currency appreciation rates (1 - 5%)
                 - Strong USD
                 - Capital inflows via FDI, remittances, etc.
                 - FX interventions to stabilize INR
@@ -282,7 +283,7 @@ class InteractiveHeatmap:
                 - Food supply shocks
                 - Supply bottlenecks (domestic & interanational)
                 - Resilient domestic demand & credit growth
-            - Low currency depreciation rates (1 - 3%)
+            - Low currency appreciation rates (1 - 3%)
                 - FX interventions to stabilize INR
                 - Robust inflows via FDI, remittances, etc.    
                 - Capital controls
@@ -298,7 +299,7 @@ class InteractiveHeatmap:
                 - Food supply shocks
                 - Supply bottlenecks (domestic & interanational)
                 - Resilient domestic demand & credit growth
-            - Very Low Currency Depreciation Rates (1)%
+            - Very Low Currency appreciation Rates (1)%
                 - Severe FX interventions to peg INR
                 - Robust inflows via FDI, remittances, etc
                 - Severe capital controls
@@ -314,14 +315,14 @@ class InteractiveHeatmap:
         scenario_data = []
         for name, params in self.scenarios.items():
             btc_needed = self.calculate_btc_for_parameters(
-                params['inflation'] / 100, params['depreciation'] / 100
+                params['inflation'] / 100, params['usd_appreciation'] / 100
             )
 
             scenario_data.append({
 
                 'Scenario': f"{name.title()}",
                 'Inflation Rate': f"{params['inflation']:.1f}%",
-                'USD Depreciation': f"{params['depreciation']:.1f}%",
+                'USD/INR Appreciation': f"{params['usd_appreciation']:.1f}%",
                 'BTC Required': f"{btc_needed:.4f}",
             })
 
@@ -335,16 +336,6 @@ class InteractiveHeatmap:
         - **Extreme**: Located in the challenging orange-red zone
         - **Coverage**: These three scenarios span the risk spectrum effectively
         """)
-
-    def _get_risk_zone(self, inflation_rate: float, depreciation_rate: float) -> str:
-        """Determine which risk zone the parameters fall into."""
-
-        if inflation_rate <= 6 and depreciation_rate <= 3:
-            return "🟦 Low Risk"
-        elif inflation_rate <= 9 and depreciation_rate <= 6:
-            return "🟨 Moderate Risk"
-        else:
-            return "🟥 High Risk"
 
 
 def display_interactive_heatmap_chart(current_age: int, annual_expenditure_inr: float, retirement_year: int):

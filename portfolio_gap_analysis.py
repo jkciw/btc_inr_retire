@@ -2,12 +2,11 @@
 Portfolio Gap Analysis Module with Three SIP Scenarios
 
 This module calculates SIP strategies to reach the Conservative Bitcoin target using
-three scenarios with different USD/INR depreciation rates and Bitcoin percentiles.
+three scenarios with different USD/INR appreciation rates and Bitcoin percentiles.
 """
 
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -68,15 +67,15 @@ class PortfolioGapAnalysis:
         else:
             return bitcoin_power_law_price_percentile(days_since_genesis, 50.0)
 
-    def usd_inr_exchange_rate(self, years_from_now: float, annual_depreciation_rate: float) -> float:
+    def usd_inr_exchange_rate(self, years_from_now: float, annual_usd_appreciation_rate: float) -> float:
         """
-        Project USD/INR exchange rate based on annual depreciation rate.
+        Project USD/INR exchange rate based on annual appreciation rate.
         """
         current_market_rate = self.current_usd_inr_rate
 
-        # Apply compound depreciation (INR weakens against USD)
+        # Apply compound appreciation (INR weakens against USD)
         future_rate = current_market_rate * \
-            ((1 + annual_depreciation_rate) ** years_from_now)
+            ((1 + annual_usd_appreciation_rate) ** years_from_now)
         return future_rate
 
     def get_user_btc_holdings(self):
@@ -155,9 +154,9 @@ class PortfolioGapAnalysis:
         """
         Calculate SIP strategies for three scenarios to reach Conservative Bitcoin target.
 
-        Optimistic: 5% USD/INR depreciation + Power Law Trendline
-        Conservative: 3% USD/INR depreciation + 83.5th Percentile BTC Price  
-        Extreme: 3% USD/INR depreciation + 97.5th Percentile BTC Price
+        Optimistic: 5% USD/INR appreciation + Power Law Trendline
+        Conservative: 3% USD/INR appreciation + 83.5th Percentile BTC Price  
+        Extreme: 3% USD/INR appreciation + 97.5th Percentile BTC Price
         """
         if btc_gap <= 0:
             return {
@@ -187,11 +186,11 @@ class PortfolioGapAnalysis:
             'months_to_retirement': 0,
             'weeks_to_retirement': 0,
             'scenario_name': '',
-            'usd_inr_depreciation': 0,
+            'usd_inr_appreciation': 0,
             'btc_percentile': ''
         }
 
-    def _calculate_scenario_sip(self, btc_gap: float, usd_inr_depreciation: float, btc_percentile: str, scenario_name: str) -> Dict[str, Any]:
+    def _calculate_scenario_sip(self, btc_gap: float, usd_inr_appreciation: float, btc_percentile: str, scenario_name: str) -> Dict[str, Any]:
         """Calculate SIP for a specific scenario."""
         current_date = datetime.now()
         retirement_date = datetime(self.retirement_year, 1, 1)
@@ -216,9 +215,9 @@ class PortfolioGapAnalysis:
             btc_price_usd = self.bitcoin_power_law_price(
                 last_day_of_this_month, btc_percentile)
 
-            # Get USD/INR rate for this time period with specified depreciation
+            # Get USD/INR rate for this time period with specified appreciation
             usd_inr_rate = self.usd_inr_exchange_rate(
-                years_from_now, usd_inr_depreciation)
+                years_from_now, usd_inr_appreciation)
             total_usd_inr_rate += usd_inr_rate
 
             # Convert to INR
@@ -259,7 +258,7 @@ class PortfolioGapAnalysis:
             'weeks_to_retirement': weeks_to_retirement,
             'monthly_details': monthly_details,
             'scenario_name': scenario_name,
-            'usd_inr_depreciation': usd_inr_depreciation,
+            'usd_inr_appreciation': usd_inr_appreciation,
             'btc_percentile': btc_percentile
         }
 
@@ -371,7 +370,7 @@ class PortfolioGapAnalysis:
                 comparison_data.append({
                     "Scenario": scenario_details['name'],
                     "Assumed BTC Price Model": scenario_details['btc_model'],
-                    "Assumed USD/INR Depreciation": f"{sip_data['usd_inr_depreciation']*100:.1f}% annually",
+                    "Assumed USD/INR Appreciation": f"{sip_data['usd_inr_appreciation']*100:.1f}% annually",
                     "Monthly SIP": f"₹{indian_commas(sip_data['monthly_sip_inr'], 0)}",
                     "Weekly SIP": f"₹{indian_commas(sip_data['weekly_sip_inr'], 0)}",
                     "Total Investment": f"₹{indian_commas(sip_data['total_investment_inr'], 0)}",
