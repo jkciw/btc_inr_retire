@@ -24,6 +24,7 @@ from power_law_chart import display_power_law_chart
 from heatmap import display_interactive_heatmap_chart
 from portfolio_gap_analysis import display_portfolio_gap_analysis
 from config import INPUT_LIMITS
+from currency_analysis import display_currency_analysis_page
 
 
 def main():
@@ -71,12 +72,14 @@ def main():
 
         with tab3:
             display_power_law_page()
+
     else:
         # Show all three tabs
-        tab1, tab2, tab3 = st.tabs([
+        tab1, tab2, tab3, tab4 = st.tabs([
             "🏠 Bitcoin Calculator",
             "📊 Accumulation Strategy Analysis",
-            "📈 About Power Law Model"
+            "📈 About Power Law Model",
+            "💹 Currency Analysis"
         ])
 
         with tab1:
@@ -87,6 +90,8 @@ def main():
 
         with tab3:
             display_power_law_page()
+        with tab4:
+            display_currency_analysis_page()
 
 
 def display_calculation_status():
