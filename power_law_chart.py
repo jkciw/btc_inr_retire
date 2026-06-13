@@ -154,7 +154,12 @@ class PowerLawChart:
             total_data_points = len(self.btc_data)
             data_span_years = (self.btc_data['timeClose'].max(
             ) - self.btc_data['timeClose'].min()).days / 365.25
-            latest_price = yearly_prices.get(current_year, None)
+            latest_price = None
+            latest_price_year = None
+
+            if yearly_prices:
+                latest_price_year = max(yearly_prices.keys())
+                latest_price = yearly_prices[latest_price_year]
         else:
             total_data_points = 0
             data_span_years = 0
@@ -167,6 +172,7 @@ class PowerLawChart:
             'total_data_points': total_data_points,
             'data_span_years': data_span_years,
             'latest_price': latest_price,
+            'latest_price_year': latest_price_year,
             'current_year': current_year
         }
 
@@ -326,6 +332,12 @@ class PowerLawChart:
         power_law_df = self.generate_power_law_data()
         yearly_prices = self.get_yearly_prices()
         metrics = self.calculate_success_metrics(power_law_df, yearly_prices)
+        latest_price = metrics.get("latest_price")
+
+        latest_price_year = metrics.get("latest_price_year")
+
+        latest_price_text = (
+            f"${latest_price:,.0f}" if latest_price is not None else "Unavailable")
 
         col1, col2 = st.columns(2)
         with col1:
@@ -338,20 +350,22 @@ class PowerLawChart:
                 current_actual = metrics['latest_price']
                 if current_actual:
                     multiplier = current_actual / current_conservative
-                st.success(f"""
-                **Power Law Analysis as on 1st Jan {current_year}:**
-                - **Trend Line**: ${current_data['Trendline'].iloc[0]:,.0f}
-                - **Conservative (2.5th)**: ${current_data['2.5th'].iloc[0]:,.0f}
-                - **Market Price**: ${metrics['latest_price']:,.0f} (real market price)
-                - **Safety Multiple**: {multiplier:.1f}x above conservative line
-                """)
+                    st.success(f"""
+                    **Power Law Analysis as on 1st Jan {current_year}:**
+                    - **Trend Line**: ${current_data['Trendline'].iloc[0]:,.0f}
+                    - **Conservative (2.5th)**: ${current_data['2.5th'].iloc[0]:,.0f}
+                    - **Market Price**: ${metrics['latest_price']:,.0f} (real market price)
+                    - **Safety Multiple**: {multiplier:.1f}x above conservative line
+                    """)
+                else:
+                    st.warning("Latest BTC price unavailable from CSV data.")
 
         with col2:
             st.success(f"""
             **Real Data:**
             - **Data Points**: {metrics['total_data_points']:,} days of actual prices
             - **Time Span**: {metrics['data_span_years']:.1f} years of continuous data
-            - **Latest Price**: ${metrics['latest_price']:,.0f} (real market data)
+            - **Latest Price**: ${metrics['latest_price']:,.0f} as of {metrics['latest_price_year']} (latest available CSV data)
             """)
 
     def display_data_summary(self):
