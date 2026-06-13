@@ -342,7 +342,16 @@ class PowerLawChart:
         col1, col2 = st.columns(2)
         with col1:
             current_year = metrics['current_year']
-            current_data = power_law_df[power_law_df['Year'] == current_year]
+            if power_law_df is None or power_law_df.empty:
+                st.warning("Power law projection data is unavailable.")
+                return
+            if "Year" not in power_law_df.columns:
+
+                st.error(
+                    f"Power law data missing 'Year' column. Available columns: {power_law_df.columns.tolist()}")
+
+                return
+            current_data = power_law_df[power_law_df["Year"] == current_year]
 
             if not current_data.empty:
                 current_conservative = current_data['2.5th'].iloc[0]
